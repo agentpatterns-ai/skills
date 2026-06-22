@@ -1,0 +1,103 @@
+---
+name: conflicting-instruction-detector
+description: Surface semantic conflicts across a set of agent instructions / a skill library — pairs of independently-authored rules that contradict in effect though they share no wording — and present them as candidate conflicts for human review, never auto-resolved. Invoke when checking a multi-file instruction set or skill library for cross-document contradictions, or when an agent behaves inconsistently and you suspect rules in different files disagree. Skip when auditing one file's attention/density or its within-file contradictions and precedence (use audit-instruction-file), or when you want a conflict mechanically fixed (this skill only flags — it never resolves).
+user-invocable: true
+version: "0.1.0"
+usage: /conflicting-instruction-detector [path-or-dir]
+---
+
+# Conflicting-Instruction Detector
+
+A skill library or multi-file instruction set accumulates rules from many authors over time; two of
+them can quietly contradict in *effect* while sharing no wording and living in different files. This
+skill reads the set as a whole and surfaces those **candidate** conflicts for a human to adjudicate.
+It is the cross-document, **semantic** lane — its sibling `audit-instruction-file` (CE-5 / CE-6)
+already owns within-one-file and layer-stack contradiction and precedence.
+
+**Stance — detect and surface for human review; read-only; never resolve, never auto-fix.** This is
+the deliberate design of the skill, not a limitation. Semantic cross-document conflict detection is
+*unreliable*: even strong models drop to ~60% F1 on cross-type conflicts ([ConInstruct,
+arXiv:2511.14342](https://arxiv.org/abs/2511.14342)), so a large share of flags are false positives.
+Every flag is therefore a **review candidate, never a confirmed conflict**, and there is **no `--fix`
+/ auto-resolve path** — unlike the higher-precision transforms in this family. The reason is
+measured: models that *do* detect a conflict overwhelmingly fail to surface it, silently resolving
+~97.5% of the time (ConInstruct). This skill exists to force the surface and hand the choice to a
+human — picking a winner is exactly the move it refuses to make.
+
+## Input
+- `path-or-dir` (optional): the instruction set / skill library to scan (a dir of `SKILL.md`s,
+  `AGENTS.md`/`CLAUDE.md` files, rule files). Default: scan the repo for instruction files.
+- Needs **≥2 documents** — a single file's internal contradictions are `audit-instruction-file`'s job.
+
+## Scope
+Surfaces **cross-document semantic** conflicts: two rules in *different* files that cannot both be
+satisfied for the same input. **Out of scope** (hand off, do not duplicate): a single file's
+attention/length/density and its *within-file* or *layer-stack* contradictions + precedence — those
+are `audit-instruction-file` CE-5 / CE-6. Also out of scope: **resolving** any conflict, picking a
+precedence winner, or editing files. It reports; the human decides.
+
+## Procedure
+1. **Collect** every instruction document in scope; record each rule with its file + line. Two or
+   more docs required.
+2. **Pair.** Enumerate every pair of rules that prescribe *different* actions — the candidate set.
+3. **Overlap gate — run this BEFORE ranking; it is the main false-positive filter.** For each
+   candidate pair, try to construct a *concrete input that triggers both rules at once*. If you
+   cannot — their conditions are disjoint (different branch type, subtree, file glob, role, audience)
+   — the rules **do not conflict**: route the pair to *likely-not-a-conflict* and drop it from the
+   queue. Only pairs with a real overlapping input proceed. At ~60% F1 the dominant error is two rules
+   that look opposite but apply to disjoint scopes; this gate is what removes them.
+4. **Classify** each surviving pair against the conflict classes in [`checks.md`](checks.md) — load it
+   now — confirming both rules genuinely cannot hold on that overlapping input.
+5. **Rank by review-worthiness**, not certainty: `(confidence the conflict is real) × (cost if an
+   agent follows the wrong one)`. Surface high-cost pairs first even at middling confidence; that is
+   what a human-review queue is for.
+6. **Write a clarifying question per candidate** — never a resolution. State the apparent
+   contradiction and ask which rule governs (or whether they coexist), because the skill must not
+   silently pick ([ConInstruct recognition–communication gap](https://arxiv.org/abs/2511.14342)).
+7. **Report** with the template. Label everything as *candidates to review*, not findings.
+
+## Conflict classes & triage
+The classes (`CI-1` direct cross-document contradiction … `CI-5` cross-doc drift) with Flags / Why /
+the human-review question live in [`checks.md`](checks.md) — loaded on demand. Each is read-only and
+emits a question, not a fix.
+
+## Output template
+```
+# Candidate instruction conflicts — <target>   (review queue, not findings)
+
+⚠ Detection of semantic conflicts is unreliable (~60% F1, ConInstruct). Each row is a CANDIDATE
+to confirm — not a confirmed conflict. Nothing here is auto-resolved.
+
+| Rank | Class | Rule A (file:line) | Rule B (file:line) | Apparent contradiction | Question for you |
+|------|-------|--------------------|--------------------|------------------------|------------------|
+| 1 | CI-2 | testing.md:12 "always run the full suite before commit" | speed.md:4 "skip slow tests in pre-commit; run them in CI" | both fire pre-commit; can't run-all and skip-slow at once | Which governs pre-commit — full suite or fast subset? |
+| 2 | CI-3 | CLAUDE.md:8 "use tabs" | style/SKILL.md:20 "indent with 2 spaces" | same files, different indent; no precedence stated | Which file wins, or is one scoped to a subtree? |
+
+**Likely NOT a conflict (shown for transparency):** <pairs that look like conflicts but coexist —
+e.g. different scopes/conditions — so the reader sees the false-positive surface, not just the hits.>
+
+**Nothing here is resolved.** Pick a winner per row, then apply it yourself or with
+`audit-instruction-file` (within a file) — this skill does not edit.
+```
+
+## Related / pairing
+- **Sibling, not overlap** — `audit-instruction-file` CE-5 / CE-6 owns *within-file / layer-stack*
+  and *lexical* contradiction + precedence, and may apply fixes. This owns *cross-document semantic*
+  conflict and **never applies anything**. Keep the two stances in sync (see this skill's source map).
+- Sits beside `lethal-trifecta-audit` in the audit-shaped detector family.
+- Sources: [ConInstruct, arXiv:2511.14342](https://arxiv.org/abs/2511.14342) (detection unreliability
+  + the recognition–communication gap); [WIRE, arXiv:2605.27784](https://arxiv.org/abs/2605.27784)
+  (within-policy conflicts are common; diagnostics are *conditional, not deployment-frequency*);
+  [SEFZ, arXiv:2605.13044](https://arxiv.org/abs/2605.13044) (a natural-language label is not
+  enforcement).
+
+## Critical rules (read last)
+- **Run the overlap gate before ranking.** A pair with no single input that triggers *both* rules is
+  not a conflict — route it to likely-not-a-conflict, never to Rank 1. Two rules that read as
+  opposites but apply to disjoint scopes (e.g. `never force-push` to shared history vs `force-push ok`
+  on your own un-pulled branch) are the top false-positive source; this gate removes them.
+- **Flag, never resolve.** No `--fix`, no auto-resolve, no precedence-winner picked by the skill —
+  the human adjudicates. This is the headline contract, not a footnote.
+- **Every row is a candidate, not a finding.** ~60% F1 on semantic conflicts means expect false
+  positives; present the likely-not-conflict pairs too so the skill is not over-trusted.
+- **Read-only.** It reports a review queue and asks questions; it edits nothing.
