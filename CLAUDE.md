@@ -5,15 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this repo is
 
 A curated collection of portable, project-agnostic **agent skills**, built from the
-**agentpatterns** researched corpus. There is no build, no test runner, no dependencies — the
-entire repo is Markdown. Each top-level directory is one skill, defined by a single `SKILL.md`
-with load-bearing frontmatter.
+**agentpatterns** body of knowledge — the researched **corpus** and the **learn** courses built
+from it. There is no build, no test runner, no dependencies — the entire repo is Markdown. Each
+top-level directory is one skill, defined by a single `SKILL.md` with load-bearing frontmatter.
 
-This repo is one of three complementary projects: the **agentpatterns** corpus is the
-researched source material, **learn** and **website** are sibling projects, and **skills** (this
-repo) is the curated, executable distillation of that corpus into agent skills. When a skill's
-claims derive from a pattern, they should trace back to that corpus (e.g. the agentpatterns.ai
-references already cited in the skill bodies).
+This repo is the downstream of two sources: the **agentpatterns corpus** (the researched
+single-concept pages, served from **website**) and **learn** (courses/lessons built from that
+corpus). **skills** (this repo) is the curated, executable distillation of both into agent skills.
+When a skill's claims derive from a pattern, they should trace back to the **corpus** as the
+primary source (e.g. the agentpatterns.ai references already cited in the skill bodies); a `learn`
+lesson, being generated training material, supplements but does not replace that corpus citation.
 
 ## Skill contract
 
