@@ -1,0 +1,22 @@
+# agentpatterns skills shelf — one skill dir per line
+# update = copy these dirs and DELETE any local shelf-skill dir not listed here
+architecture-committee
+audit-geo-content
+audit-github-actions-security
+audit-harness-safety
+audit-instruction-file
+audit-lethal-trifecta
+audit-mcp-server
+audit-memory-retrieval-integrity
+audit-multi-agent-orchestration
+audit-observability-setup
+audit-prompt-cache-hygiene
+audit-prompt-hook-placement
+audit-secret-exposure
+audit-self-improvement-protocol
+audit-supply-chain-sinks
+audit-tool-definition
+audit-verification-gates
+compress-prompt
+conflicting-instruction-detector
+write-tool-description
