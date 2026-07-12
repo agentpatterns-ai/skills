@@ -17,8 +17,10 @@ shelf skill dir that is no longer listed** (e.g. `rsync -a --delete` per dir, or
 diffing your install against MANIFEST). A plain re-copy without pruning strands stale copies
 when a skill is **renamed or moved to a different category**: the old dir keeps dispatching
 under its old name while every sibling's Skip-clause handoff points at the new one. Renames
-are called out (`old-name` → `new-name`) in each release's notes. Each release replaces this
-repo's history with a single commit, so a fresh `git clone --depth 1` is always a correct install.
+are called out (`old-name` → `new-name`) in each release's notes. This repo's history is
+incremental (one commit per publish, tagged `vX.Y.Z` per release) — `git clone` (or
+`git clone --depth 1` for a shallow install) both give a correct, current install; pin
+`--branch vX.Y.Z` (or `<skill>@vX.Y.Z` with `gh skill install`, below) for a reproducible one.
 
 
 ## "Audit my agent harness" — the run order
