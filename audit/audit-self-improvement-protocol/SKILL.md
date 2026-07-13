@@ -2,7 +2,7 @@
 name: audit-self-improvement-protocol
 description: Audit whether an agent's always-loaded base instruction file (CLAUDE.md / AGENTS.md / equivalent) carries a well-formed self-improvement protocol — the standing section that gates persisted learnings behind approval, routes them to a backlog, and bars autonomous rewrite of the source-of-truth core or executable scaffolding — then install or repair the canonical protocol on confirmation. Invoke when adding, reviewing, or repairing a self-improvement / learning-loop section in a base instruction file, or wiring an agent to capture and track its own improvement ideas. Skip when auditing the whole file's attention / length / density structure (use audit-instruction-file), harness permissions / sandbox / reversibility / cost boundaries (use audit-harness-safety), placing a must-never-fail rule into a deterministic hook (use audit-prompt-hook-placement), or simply filing one backlog item (file it in your backlog tracker).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-self-improvement-protocol [path-to-base-instruction-file-or-repo]
 ---
 
@@ -55,8 +55,11 @@ sandbox that backs it.
    in the file), else Medium — offer `template.md`, and do **not** fan out SIP-2…SIP-7 (they grade a
    section that doesn't exist). **If the section exists but is not always-loaded (or the load path is
    unverified):** SIP-1 fires for placement (same severity logic) **and** SIP-2…SIP-7 still grade the
-   section text.
-   Done when every finding carries a severity.
+   section text. **De-duplicate by evidence:** if the same clause is the underlying mechanism for two or
+   more checks (e.g. one unattended-executable-self-mod clause also loosely matches SIP-2's rewrite text
+   or SIP-3's write-gate text), report only the single most specific check (here, SIP-6) and do not also
+   count the others as findings against otherwise well-formed rules.
+   Done when every finding carries a severity and no finding is a derivative restatement of another.
 4. **Recommend the fix per finding** (the `checks.md` Fix column). When the section is missing or malformed,
    offer to install the canonical protocol from [`template.md`](template.md) — additively, as a delta.
    Done when every finding names its Fix-column remediation.

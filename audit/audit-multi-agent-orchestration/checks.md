@@ -85,6 +85,18 @@ is read-only. Remediation links point to the matching `learn` lesson for step-or
 
 ## Gates & verification (MA-V*)
 
+> **Discriminator (run first, mutually exclusive).** Search for a distinct critic/verifier
+> **agent definition** — its own dedicated file/prompt (e.g. a `critic.md` alongside `worker.md`), not
+> just a call that reuses the generic worker spawn path with a different role-name string or prompt
+> argument. **An ad-hoc `spawn_worker("critic", ...)`-style call with no separate agent definition
+> file does NOT count as a verifier existing** — it's the same producer machinery relabeled, still
+> self-administered. **Nothing found ⇒ MA-V1**, full stop — regardless of how the producer's own
+> completion call looks (`mark_done()`, a self-set status flag, a loop that only breaks on that
+> relabeled call's verdict, etc.); there is no verifier to be mis-wired. **MA-V2 applies only when a
+> genuinely separate verifier agent/role definition exists** and is wired wrong (its verdict isn't
+> checked, it isn't independent, it's off the critical path, or it lacks precision evidence). Never
+> label a no-dedicated-verifier-definition case MA-V2.
+
 ### MA-V1 — No independent verifier gate on "done" (producer self-declares)
 - **Flags:** the agent that did the work also declares it complete; no separate read-only verifier on
   the critical path, no fail-closed default, no packetized admission record.

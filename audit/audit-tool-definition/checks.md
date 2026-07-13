@@ -129,12 +129,14 @@ detection is read-only — flag and recommend, never rewrite (that is `write-too
   A standalone toolset-curation skill, if spun out later, owns the set-level half.
   Remediation: [learn — consolidation-vs-sprawl](https://learn.agentpatterns.ai/tool-engineering/consolidation-vs-sprawl/).
 
-### TD-12 — ToolLeak / malicious definition *(security hand-off — corpus gap)*
+### TD-12 — ToolLeak / malicious definition *(security hand-off)*
 - **Flags:** a `description` or `inputSchema` that requests the system prompt, conversation history,
   secrets, or API keys.
+- **Why:** this is a documented, multi-source attack pattern (ToolLeak), not a hypothetical —
+  malicious argument fields exfiltrate the system prompt on every tested agent-LLM pair because
+  filling a plausible-looking parameter reads as routine argument generation, not an explicit
+  disclosure request refusal training was trained against
+  ([vetting-tool-definitions-before-install](https://agentpatterns.ai/security/vetting-tool-definitions-before-install/)).
 - **Action:** **refuse at install; do not reword.** Hand off to `audit-lethal-trifecta` — this is a
   security/exfiltration concern, not tool ergonomics.
   Remediation: [learn — the-lethal-trifecta](https://learn.agentpatterns.ai/security/the-lethal-trifecta/).
-- **Note:** there is **no agentpatterns.ai corpus page** backing this; the only source is a
-  project-auditor rule (provenance in the harness source-map). Do **not** ship it as a core normative
-  ergonomics claim — flag-and-route only, pending a commissioned corpus page.

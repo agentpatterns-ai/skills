@@ -2,7 +2,7 @@
 name: audit-secret-exposure
 description: Scan an agent's context surfaces — instruction files, skill files, harness config, tool defs, and credential-bearing files — for credentials that landed where the model can read them — hardcoded keys, secrets pasted into prompts/tool args, agent-readable .env/key files with no mechanical block, long-lived keys on harness/context surfaces where short-lived tokens exist (workflow-file OIDC posture — use audit-github-actions-security), URL query-string leak channels, secrets baked into skill examples, and control logic stored in a system prompt. Invoke when granting or hardening an agent's repo/harness and you need a deterministic literal-secret content scan. Skip when auditing whether private-data + untrusted-input + egress co-occur on one execution path (use audit-lethal-trifecta) or auditing dependency/install sinks (use audit-supply-chain-sinks).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-secret-exposure [path-to-agent-config-or-repo]
 ---
 
@@ -55,8 +55,11 @@ exfil edge — a leaked secret is the *payload* a trifecta exfiltrates.
    + `PreToolUse` hook / placeholder + skill-dir scanning / short-lived WIF token / externalise from
    the prompt). Prefer the control the model cannot override.
    Done when every finding names one deterministic fix.
-5. **Report** with the template below. Read-only — apply nothing without confirmation.
-   Done when the filled template covers every finding.
+5. **Report** with the template below. **Hard requirement:** every finding's Why→corpus and
+   Fix→lesson citations must be resolved and printed in the report itself (Citations section,
+   below) — never deferred to "resolved when filed."
+   Done when the filled template covers every finding and the Citations section resolves every
+   check ID used, by real URL, from `checks.md`.
 
 ## Detectors
 The seven detectors (SE-1…SE-7) — flags, cited why, and the deterministic fix each maps to — plus the
@@ -74,6 +77,15 @@ credential-format regex table and an optional auditor-only recon check live in
 | High | SE-3  | .env (no deny rule)           | agent-readable secrets file | permissions.deny + PreToolUse hook |
 | High | SE-6  | skills/deploy/SKILL.md:22     | curl -H "Authorization: Bearer ghp_…" | $VAR placeholder + wrapper; scan skill dirs; ROTATE |
 | Med  | SE-4  | ci.yml:8                      | static ANTHROPIC_API_KEY where OIDC exists | short-lived WIF token; UNSET don't blank |
+
+## Citations
+One row per check ID used above — required in every report, not only in the filed issue.
+| Check | Why → corpus | Fix → lesson |
+|-------|--------------|--------------|
+| SE-1  | [secrets-management-for-agents](https://agentpatterns.ai/security/secrets-management-for-agents/) | checks.md → SE-1 lesson URL |
+| SE-3  | [protecting-sensitive-files](https://agentpatterns.ai/security/protecting-sensitive-files/) | checks.md → SE-3 lesson URL |
+| SE-6  | [credential-hygiene-agent-skills](https://agentpatterns.ai/security/credential-hygiene-agent-skills/) | checks.md → SE-6 lesson URL |
+| SE-4  | [workload-identity-federation-for-agents](https://agentpatterns.ai/security/workload-identity-federation-for-agents/) | checks.md → SE-4 lesson URL |
 
 **Halt-and-rotate:** <every High literal — already in logs/history; rotate, don't just delete.>
 **Clean surfaces:** <which, and the control that keeps them clean — env injection / deny rule / placeholders.>

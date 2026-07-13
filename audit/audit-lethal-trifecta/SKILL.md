@@ -2,7 +2,7 @@
 name: audit-lethal-trifecta
 description: Audit an agent / sub-agent / MCP setup for the lethal trifecta — private-data access + untrusted-content exposure + external egress on one execution path — and flag the prompt-injection and exfiltration routes it opens. Invoke when reviewing or hardening an agent harness's security architecture (sub-agent tool allowlists, MCP servers, permissions, sandbox/egress config) or before deciding if granting an agent new tools, data, or web/network access is safe. Skip when the ask is literal secrets in context (use audit-secret-exposure), LLM-output sinks or agent-run installs (use audit-supply-chain-sinks), blast-radius/reversibility containment (use audit-harness-safety), retrieval-boundary authorization (use audit-memory-retrieval-integrity), instruction-file content/attention (use audit-instruction-file), or reviewing application source code for vulnerabilities (use a general security review).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-lethal-trifecta [path-to-agent-config-or-repo]
 ---
 
@@ -47,8 +47,12 @@ monitoring (static config audit).
    Done when every path carries a TRIFECTA/safe verdict.
 4. **Recommend the cheapest leg to remove** — egress-first for coding agents — preferring a
    deterministic control over a prompt mitigation (mitigation map in `checks.md`). Leg removal
-   *migrates* risk, so name the new high-value target that must then be hardened.
-   Done when every flagged path names the leg to remove and the target the risk migrates to.
+   *migrates* risk, so name the new high-value target that must then be hardened. If the target
+   already carries a prose-only safety line for this exact risk (e.g. "never exfiltrate secrets",
+   "don't leak data") — name it explicitly and state it is not enforcement (per the Stance above),
+   not just imply the deterministic fix is better.
+   Done when every flagged path names the leg to remove, the target the risk migrates to, and any
+   existing prose-only guardrail for that risk is named as non-enforcing.
 5. **Report** with the template below.
    Done when the paths table, Findings, Safe paths, and Smallest high-impact change are filled.
 

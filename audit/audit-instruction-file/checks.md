@@ -176,6 +176,10 @@ self-contained: an ID, what it **Flags**, **Why** (with a source), and the **Fix
   (structural compression — complements CE-3). To *apply* the fix, hand the flagged section to the
   **`compress-prompt`** skill — this detector pairs with that transform.
   Remediation: [learn — signal-per-token](https://learn.agentpatterns.ai/context-engineering/signal-per-token/).
+- **Consolidate repeats:** when the same low-density root cause (e.g. hedging/ceremony phrasing)
+  recurs across several paragraphs of one file, that is one systemic finding, not several — emit a
+  **single** finding row citing every location as evidence (e.g. `L3–6, L8–10, L12–14, L16–18,
+  L20–21`), not one row per occurrence.
 
 ---
 

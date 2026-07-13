@@ -1,8 +1,8 @@
 ---
 name: audit-prompt-hook-placement
-description: Audit the enforcement-medium decision in an agent harness — for each stated rule, does it belong in prose (judgment) or relocated to a deterministic gate (PreToolUse hook / CI / tool-restriction)? — and flag misplaced absolute rules and unsound hooks. Invoke when hardening a harness for where a rule should live, when a recurring error keeps attracting more prompt prohibitions, before trusting a CLAUDE.md prohibition for a must-never-fail constraint, or when adding/reviewing a hook. Skip when judging the wording/attention/density of prose that legitimately stays prose, or diagnosing why one instruction file's documented rules aren't being followed (use audit-instruction-file), the private-data/untrusted-input/egress exfiltration model (use audit-lethal-trifecta), or auditing whether an existing completion gate — Stop hook, ledger, grader — is soundly anchored to external state (use audit-verification-gates).
+description: Audit the enforcement-medium decision in an agent harness — for each stated rule, does it belong in prose (judgment) or relocated to a deterministic gate (PreToolUse hook / CI / tool-restriction)? — and flag misplaced absolute rules and unsound hooks. Invoke when hardening a harness for where a rule should live, when a recurring error has piled up more prompt prohibitions and you're deciding whether to relocate them to a gate, before trusting a CLAUDE.md prohibition for a must-never-fail constraint, or when adding/reviewing a hook. Skip when judging prose wording/attention/density, or simply diagnosing why a rule in one file isn't followed with no request to relocate it (use audit-instruction-file — it can recommend a hook and hand off here), the private-data/untrusted-input/egress exfiltration model (use audit-lethal-trifecta), or auditing whether an existing completion gate is soundly anchored to external state (use audit-verification-gates).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-prompt-hook-placement [path-to-harness-or-instruction-file]
 ---
 

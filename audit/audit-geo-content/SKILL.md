@@ -2,7 +2,7 @@
 name: audit-geo-content
 description: Audit a documentation / content-markdown corpus for AI answer-engine retrieval and citability (GEO) — chunkability (answer-first, atomic, descriptive headings), assertion density, and machine-readable signals (llms.txt, schema). Invoke when reviewing or hardening published docs for AI citation / generative-engine visibility ("is this page citable by ChatGPT/Perplexity/Claude?", a GEO review, or before/after a docs restructure aimed at retrieval). Skip when auditing agent-harness config — tool allowlists, MCP, sandbox/egress (use audit-lethal-trifecta) — or instruction-file prose/attention such as a SKILL.md or CLAUDE.md (use audit-instruction-file); and suppress for private / non-indexed docs.
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-geo-content [path-to-docs-corpus]
 ---
 
@@ -59,8 +59,10 @@ density, machine-readable corpus files. **Out of scope** (hand off):
    (a `Disallow` on a retrieval bot is fatal to citability — GEO-M3).
    Done when all three M-checks carry a recorded corpus-level verdict.
 5. **Report** with the template below — per-finding `Check / Where / Flag / Fix`, citing the page and
-   linking the remediation lesson. Recommend; apply nothing without confirmation.
-   Done when the Findings table, Clean/passing, and Highest-impact fix sections are all filled.
+   **both** the corpus evidence (Why) and the remediation lesson (Fix) — every finding, every time;
+   never emit only one of the two. Recommend; apply nothing without confirmation.
+   Done when the Findings table, Clean/passing, and Highest-impact fix sections are all filled, and
+   every finding row carries both its Why (→ corpus) and Fix (→ lesson) citation.
 
 Per-check detectors (Flags / Why+source / Fix, grouped Structure / Substance / Machine-readability /
 Guard) live in [`checks.md`](checks.md) — load when auditing. Several are deterministic (heading grep,
@@ -73,16 +75,16 @@ word-count, page-floor, llms.txt existence); prefer them over judgement.
 Applicability (GEO-G1): APPLIES — public, indexed docs corpus.   (else: SUPPRESSED — <reason>; stop.)
 
 ## Findings
-| Check | Sev | Where | Flag | Fix (→ lesson) |
+| Check | Sev | Where | Flag (→ corpus) | Fix (→ lesson) |
 |---|---|---|---|---|
-| GEO-S1 buried answer | High | guide/setup.md#configuration | Opens "In this article we'll explore…" — preamble averages the chunk embedding | Lead with a 40–60-word direct answer (answer-first-atomic-pages) |
-| GEO-S2 generic heading | Med | guide/setup.md#overview | `## Overview` — zero discriminative signal, weak deep-link anchor | Rename to a concept-naming heading (answer-first-atomic-pages) |
-| GEO-S3 length out of band | Med | guide/setup.md | 2,040-word page, no H2 splits — diluted blended embedding | Split into 200–400-word atomic sections (answer-first-atomic-pages) |
-| GEO-S4 non-atomic | High | guide/setup.md | One page covers install + auth + billing + SDK — five mechanisms | One concept per page (answer-first-atomic-pages) |
-| GEO-D1 low assertion density | Med | guide/setup.md#auth | "experts say this is significantly faster" — unattributed + anchorless | Numbers+units, named/dated source (assertion-density) |
-| GEO-D2 no stat+source | Med | guide/setup.md#billing | No statistic and no source link in a substantive H2 | Add ≥1 sourced stat with units (assertion-density) |
-| GEO-M1 missing llms.txt | Low | <site root> | No `/llms.txt` or `/llms-full.txt` | Publish curated index; note: navigation aid, NOT a ranking signal (machine-readable-corpora) |
-| GEO-M3 retrieval bot blocked | High | /robots.txt | `User-agent: * / Disallow: /` with no retrieval-bot allow — live-fetch block, fatal to citability | Allow Tier-1 retrieval bots; WAF-block non-compliant, not robots.txt (machine-readable-corpora) |
+| GEO-S1 buried answer | High | guide/setup.md#configuration | Opens "In this article we'll explore…" — preamble averages the chunk embedding (answer-first-writing) | Lead with a 40–60-word direct answer (answer-first-atomic-pages) |
+| GEO-S2 generic heading | Med | guide/setup.md#overview | `## Overview` — zero discriminative signal, weak deep-link anchor (answer-first-writing) | Rename to a concept-naming heading (answer-first-atomic-pages) |
+| GEO-S3 length out of band | Med | guide/setup.md | 2,040-word page, no H2 splits — diluted blended embedding (atomic-pages-and-chunking) | Split into 200–400-word atomic sections (answer-first-atomic-pages) |
+| GEO-S4 non-atomic | High | guide/setup.md | One page covers install + auth + billing + SDK — five mechanisms (atomic-pages-and-chunking) | One concept per page (answer-first-atomic-pages) |
+| GEO-D1 low assertion density | Med | guide/setup.md#auth | "experts say this is significantly faster" — unattributed + anchorless (assertion-density) | Numbers+units, named/dated source (assertion-density) |
+| GEO-D2 no stat+source | Med | guide/setup.md#billing | No statistic and no source link in a substantive H2 (assertion-density) | Add ≥1 sourced stat with units (assertion-density) |
+| GEO-M1 missing llms.txt | Low | <site root> | No `/llms.txt` or `/llms-full.txt` (llms-txt) | Publish curated index; note: navigation aid, NOT a ranking signal (machine-readable-corpora) |
+| GEO-M3 retrieval bot blocked | High | /robots.txt | `User-agent: * / Disallow: /` with no retrieval-bot allow — live-fetch block, fatal to citability (ai-crawler-policy) | Allow Tier-1 retrieval bots; WAF-block non-compliant, not robots.txt (machine-readable-corpora) |
 
 **Clean / passing:** <pages that pass every check, and why.>
 **Highest-impact fix:** <the one change that most raises citability — usually answer-first + atomicity.>
@@ -102,7 +104,7 @@ an agent). Corpus + per-check primary sources (Aggarwal et al. GEO KDD 2024
 [arXiv:2311.09735](https://arxiv.org/abs/2311.09735), Anthropic Contextual Retrieval, NVIDIA 2024,
 llmstxt.org, Frase.io) cited inline per check in [`checks.md`](checks.md).
 
-**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
+**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries **both** its **Why → corpus** and **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
 
 ## Critical rules (read last)
 - **Run GEO-G1 first** — if docs aren't AI-indexed (private/versioned/procedural), GEO doesn't apply;
@@ -111,3 +113,5 @@ llmstxt.org, Frase.io) cited inline per check in [`checks.md`](checks.md).
   is detectable; keyword stuffing measured −10%. Weaken or remove unsourceable claims instead.
 - **Optimise the chunk, not the page** — answer-first + atomic is the highest-impact lever; llms.txt
   is navigation, not a ranking signal. Read-only — recommend; apply nothing without confirmation.
+- **Every finding cites both links, always** — Why (→ corpus, the evidence) **and** Fix (→ lesson,
+  the remediation); a finding with only one is incomplete — `checks.md` carries both per check ID.

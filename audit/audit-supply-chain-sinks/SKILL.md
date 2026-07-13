@@ -1,8 +1,8 @@
 ---
 name: audit-supply-chain-sinks
-description: Audit an agent harness's output boundary and dependency-install authority — every place an LLM-emitted string crosses into a code-interpreting sink (shell/exec/eval, SQL, HTML/markdown render, file path, package manager, a downstream LLM) and every place the agent can install an agent-named dependency — and flag the unvalidated sinks (OWASP LLM05) and slopsquatting install routes. Invoke when reviewing or hardening an agent that can execute generated code, run shell, build SQL, render model output, write files, or run package installs, or before granting an agent code-execution or install authority. Skip when auditing input-side data-flow architecture — whether one path co-holds private-data + untrusted-input + egress (use audit-lethal-trifecta), credential/secret hygiene in context (use audit-secret-exposure), or bounding what an already-granted action can destroy — sandbox, reversibility, kill path (use audit-harness-safety).
+description: Audit an agent harness's output boundary and dependency-install authority — every place an LLM-emitted string crosses into a code-interpreting sink (shell/exec/eval, SQL, HTML/markdown render, file path, package manager, a downstream LLM) and every place the agent can install an agent-named dependency — and flag the unvalidated sinks (OWASP LLM05) and slopsquatting install routes. Invoke when reviewing or hardening an agent that can execute generated code, run shell, build SQL, render model output, write files, or run package installs — including auto-running package installs inside a sandbox — or before granting an agent code-execution or install authority. Skip when auditing input-side data-flow architecture — whether one path co-holds private-data + untrusted-input + egress (use audit-lethal-trifecta), credential/secret hygiene in context (use audit-secret-exposure), or bounding what an already-granted action can destroy — sandbox, reversibility, kill path (use audit-harness-safety).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-supply-chain-sinks [path-to-agent-config-or-repo]
 ---
 

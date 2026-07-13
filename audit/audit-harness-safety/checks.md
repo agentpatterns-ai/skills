@@ -46,6 +46,17 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
   ([safe-command-allowlisting, *Parser-bypass exposure*](https://agentpatterns.ai/security/safe-command-allowlisting/)).
   File-path denies are the solid part of the floor; for command execution the hard floor is the HS-1
   sandbox, not the denylist.
+  *Restraint:* once a deny floor covers the standard credential/key patterns (`.env*`, `*.pem`,
+  `*.key`, `id_rsa*`, `.aws/credentials`, `.ssh/**`, `*.bak`) alongside a sandbox and an explicit tool
+  allowlist, do not fire HS-3 over incremental glob-coverage gaps — HS-3 is for **no** deny floor or a
+  real structural gap, not for second-guessing an already-adequate one.
+  *No-deny-block exception:* an **absent** `deny` block does not automatically mean "no floor" — check
+  whether the `allow` list itself is narrowly path/command-scoped (e.g. `Read(./src/**)`,
+  `Bash(npm test)` only, not bare `Read`/`Edit`/`Bash`) alongside a network-isolated sandbox. A narrow
+  allowlist that structurally excludes credential paths and destructive commands **is** the floor —
+  don't fire HS-3 for a missing explicit `deny` block on top of it. Fire HS-3 when the allow list is
+  broad/unscoped (bare `Read`, `Edit`, `Bash` with no path/command restriction) AND there is no deny
+  block — that combination has no containment at all.
 
 ### HS-4 — Over-broad / inherited tool grants
 - **Flags:** any agent or sub-agent with a **missing or wildcard `tools:`** field (inherits
@@ -76,6 +87,16 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
 - **Fix:** move the action onto a reversible primitive (branch / draft PR / staging) or add a
   human-approval gate showing the verbatim effect. Remediation:
   [reversibility-and-idempotency](https://learn.agentpatterns.ai/harness-engineering/reversibility-and-idempotency/), [snapshot-and-roll-back](https://learn.agentpatterns.ai/workflows/snapshot-and-roll-back/).
+- **Don't take a claimed "headless" / "unattended" self-description at face value — and don't treat
+  a tool-permission setting as proof of it either.** A prose line saying the agent runs unattended is
+  not evidence of headlessness. Neither is `permissions.defaultMode: bypassPermissions` / `acceptEdits`
+  or any other tool-approval-skipping setting — those control whether Claude Code's own tool-call
+  prompts appear, not whether a human/stdin is present at all; a `bypassPermissions` run can still be
+  sitting in front of an attended terminal. The ONLY evidence that genuinely establishes headlessness
+  is an actual automation trigger: a CI job/cron/webhook invocation, a scheduler, systemd/supervisor
+  management, or a non-interactive CLI flag (`--headless`, `-p`/print-mode with no TTY). Absent one of
+  those, an ask-to-continue / human-approval gate can still apply — recommend it as a valid option
+  alongside any external gate, rather than asserting inline approval categorically "can't" work.
 
 ### HS-6 — Non-idempotent state mutation in a re-runnable path
 - **Flags:** a workflow that creates a branch / comment / PR / external resource with no
@@ -109,9 +130,11 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
   [sandboxing-and-blast-radius](https://learn.agentpatterns.ai/harness-engineering/sandboxing-and-blast-radius/), [cost-controls-and-circuit-breakers](https://learn.agentpatterns.ai/harness-engineering/cost-controls-and-circuit-breakers/).
 
 ### HS-9 — Missing consumption bounds (denial-of-wallet / DoS)
-- **Flags:** an agent calling paid LLM/tools with no per-call token cap, per-task iteration cap,
-  fan-out concurrency cap, cost-velocity breaker, or per-day dollar budget — *especially* an
-  injection-reachable retry/fan-out loop (untrusted input feeds the loop that drives the spend).
+- **Flags:** requires **both** conditions together — (a) **none** of the five bounds present (per-call
+  token cap, per-task iteration cap, fan-out concurrency cap, cost-velocity breaker, per-day dollar
+  budget) **and** (b) the cost loop is injection-reachable (untrusted input drives the retry/fan-out
+  loop that spends). Partial bound coverage (e.g. `maxTurns` alone) with no injection-reachable loop
+  does **not** fire HS-9.
 - **Why:** LLM call cost is variable and attacker-influenceable; no single bound covers the cost
   dimension — real incidents reached $46K/day and $82K/48h with no per-app detection firing
   ([unbounded-consumption-resource-bounds](https://agentpatterns.ai/security/unbounded-consumption-resource-bounds/) / [OWASP LLM10:2025](https://github.com/microsoft/hve-core/blob/main/.github/skills/security/owasp-llm/references/10-unbounded-consumption.md)).

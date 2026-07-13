@@ -2,7 +2,7 @@
 name: audit-multi-agent-orchestration
 description: Audit an existing multi-agent orchestration's coordination mechanics — typed vs prose handoffs, shared mid-run state, verifier/producer role separation, and loop bounds — and flag the structural smells that make multi-agent systems fail. Invoke when reviewing or hardening a harness that already runs more than one agent (orchestrator-worker, fan-out/synthesis, lead-and-teammates, generator-critic loops), including whether the verifier role is independent of the producer. Skip when deciding whether to go multi-agent at all or which topology (use architecture-committee), auditing the general completion-gating architecture — hooks, ledgers, graders, red-green anchoring (use audit-verification-gates), auditing security legs / prompt-injection (use audit-lethal-trifecta), or a single instruction file's prose (use audit-instruction-file).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-multi-agent-orchestration [path-to-harness-or-repo]
 ---
 
@@ -64,6 +64,14 @@ Ten detectors — handoffs (MA-H*), state/topology (MA-S*), gates/verification (
 cost/scaling (MA-C*) — each with Flags / Why (cited) / Fix, plus the ceremony backfire guard, live in
 [`checks.md`](checks.md). Load it when auditing.
 
+**Citations are printed in the report, not deferred.** Each finding row's *Why it fails* and *Fix*
+cells must carry the check's own citation, resolved from `checks.md` by check ID, right there in the
+table — the real `https://agentpatterns.ai/...` (Why) and `https://learn.agentpatterns.ai/...` (Fix)
+URLs, printed in full. The `(source: checks.md → ID)` / `(lesson: checks.md → ID)` notation in the
+Output template below is a **placeholder showing where the citation goes** — a real run replaces it
+with the actual resolved URL from `checks.md`; never print that placeholder text itself as the
+citation.
+
 ## Output template
 ```
 # Multi-agent orchestration audit — <target>
@@ -75,12 +83,12 @@ Gates: none on "done". Loops: refine-loop (uncapped). Shared surfaces: scratch.m
 ## Findings
 | ID | Severity | Where | Smell | Why it fails (source) | Fix (enforced, not prompt) |
 |---|---|---|---|---|---|
-| MA-H1 | High | worker→synthesis | prose handoff, no schema | field extraction non-deterministic; ambiguity compounds | declare `## Returns` JSON: done/found/needs-attention/unresolved |
-| MA-S1 | High | workers↔scratch.md | shared mid-run state | "any state sharing between workers during execution is a design smell" | workers return to orchestrator only; non-overlapping file sets |
-| MA-S2 | High | synthesis | `"\n".join(outputs)` | pays the ~15x multi-agent token premium for zero quality gain | reasoning merge: reconcile conflicts, weight reliability |
-| MA-V1 | High | "done" | producer self-declares | self-judgement bias amplified by self-refine | separate read-only verifier on path; fail-closed; packetize |
-| MA-L1 | High | refine-loop | `while True:` | runs to budget exhaustion; reference loop is unbounded | hard `max_rounds` (start 3); skip on strong baseline |
-| MA-C1 | Med  | orchestrator | fixed worker count in code | over-spawns on simple queries | move effort-scaling (1 / 2-4 / 10+) into the prompt |
+| MA-H1 | High | worker→synthesis | prose handoff, no schema | field extraction non-deterministic; ambiguity compounds (source: checks.md → MA-H1) | declare `## Returns` JSON: done/found/needs-attention/unresolved (lesson: checks.md → MA-H1) |
+| MA-S1 | High | workers↔scratch.md | shared mid-run state | "any state sharing between workers during execution is a design smell" (source: checks.md → MA-S1) | workers return to orchestrator only; non-overlapping file sets (lesson: checks.md → MA-S1) |
+| MA-S2 | High | synthesis | `"\n".join(outputs)` | pays the ~15x multi-agent token premium for zero quality gain (source: checks.md → MA-S2) | reasoning merge: reconcile conflicts, weight reliability (lesson: checks.md → MA-S2) |
+| MA-V1 | High | "done" | producer self-declares | self-judgement bias amplified by self-refine (source: checks.md → MA-V1) | separate read-only verifier on path; fail-closed; packetize (lesson: checks.md → MA-V1) |
+| MA-L1 | High | refine-loop | `while True:` | runs to budget exhaustion; reference loop is unbounded (source: checks.md → MA-L1) | hard `max_rounds` (start 3); skip on strong baseline (lesson: checks.md → MA-L1) |
+| MA-C1 | Med  | orchestrator | fixed worker count in code | over-spawns on simple queries (source: checks.md → MA-C1) | move effort-scaling (1 / 2-4 / 10+) into the prompt (lesson: checks.md → MA-C1) |
 
 **Ceremony (non-finding):** <paths where structure exceeds the boundary-crossing — note, don't flag.>
 **Smallest high-impact change:** <the one enforced control to add first.>
@@ -98,7 +106,7 @@ cost/scaling or advisory-only gaps; **Low** = tightening with no live failure.
   [evaluator-optimizer](https://agentpatterns.ai/agent-design/evaluator-optimizer/),
   [fan-out-synthesis](https://agentpatterns.ai/multi-agent/fan-out-synthesis/).
 
-**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
+**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding's **Why → corpus** and **Fix → lesson** citations, resolved by check ID via [`checks.md`](checks.md), must already be printed in the report table itself — filing the issue carries them forward, it does not resolve them for the first time.
 
 ## Critical rules (read last)
 - **Untyped/prose handoffs, shared mid-run state, no independent verifier on "done", unbounded loops**

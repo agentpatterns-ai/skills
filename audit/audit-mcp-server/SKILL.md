@@ -2,7 +2,7 @@
 name: audit-mcp-server
 description: Audit an MCP server's own declaration — primitive choice (tool/resource/prompt), tool naming, input/output schemas, behavior annotations, error channels, transport fit, server instructions, and tool-count/token budget — the design-rule slice of the MCP spec plus agent-friendliness rules. Invoke when authoring, reviewing, or publishing an MCP server, or vetting a third-party server before wiring it in. Skip when auditing individual tool definitions' ergonomics or verifying annotations against their implementation — even for tools an MCP server exposes (use audit-tool-definition) or the whole agent harness's exfiltration/security architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-mcp-server [path-to-mcp-server-source-or-manifest]
 ---
 
@@ -55,7 +55,9 @@ flows — not yet corpus-covered (basic transport auth stays in via MS-9a).
    trust and stdio-injection *whole-harness* risk to `audit-lethal-trifecta`.
    Done when every finding cites its rule and names a fix.
 5. **Report** with the template below. Read-only — apply nothing without confirmation.
-   Done when the Findings table, Clean, Highest-impact fix, and Routed out sections are filled.
+   Done when the Findings table, Clean, Highest-impact fix, and Routed out sections are filled, and
+   **every row's Fix → lesson column is resolved to a real `checks.md` URL in the printed report
+   itself** — never deferred to "resolved when filed."
 
 ## Checks
 The nine detectors (MS-1 wrong primitive, MS-2 naming, MS-3 input schema, MS-4 output contract,
@@ -77,17 +79,20 @@ misleads the confirmation gate; metadata, not a control — route the harness-tr
 Surface: <N tools, M resources, K prompts> · transport: <stdio|HTTP> · ~<tokens> of tool defs
 
 ## Findings
-| Sev | Check | Tool / surface | Flag | Spec-correct fix |
-|---|---|---|---|---|
-| High | MS-1 | get_config | read-only context as a tool | expose as a `config://` resource |
-| High | MS-5 | delete_records | readOnlyHint:true on a destructive op | drop the hint; mark destructiveHint:true; harness-trust → audit-lethal-trifecta |
-| Med  | MS-3 | search_orders | no examples / enums / additionalProperties:false | add 1–5 examples, enum the status field, close the schema |
-| Med  | MS-7 | server | 24 tools, no lazy-discovery plan | split server or defer behind search/read (target <15) |
+| Sev | Check | Tool / surface | Flag | Spec-correct fix | Fix → lesson |
+|---|---|---|---|---|---|
+| High | MS-1 | get_config | read-only context as a tool | expose as a `config://` resource | checks.md → MS-1 lesson URL |
+| High | MS-5 | delete_records | readOnlyHint:true on a destructive op | drop the hint; mark destructiveHint:true; harness-trust → audit-lethal-trifecta | checks.md → MS-5 lesson URL |
+| Med  | MS-3 | search_orders | no examples / enums / additionalProperties:false | add 1–5 examples, enum the status field, close the schema | checks.md → MS-3 lesson URL |
+| Med  | MS-7 | server | 24 tools, no lazy-discovery plan | split server or defer behind search/read (target <15) | checks.md → MS-7 lesson URL |
 
 **Clean:** <primitives/tools that conform, and why.>
 **Highest-impact fix:** <the one change to make first.>
 **Routed out:** <whole-harness exfil → audit-lethal-trifecta; generic tool-def quality → audit-tool-definition.>
 ```
+**Hard requirement:** the **Fix → lesson** column is not optional and not filled at filing time —
+resolve each row's check ID to its `checks.md` remediation URL **in the printed report**, as shown
+above, before any backlog offer.
 
 ## Related
 - Sibling **`audit-tool-definition`** — generic tool/function-def quality (name, description, input
@@ -101,7 +106,7 @@ Surface: <N tools, M resources, K prompts> · transport: <stdio|HTTP> · ~<token
   [mcp-eager-vs-jit-loading](https://agentpatterns.ai/tool-engineering/mcp-eager-vs-jit-loading/),
   [scoped-mcp-server-discovery](https://agentpatterns.ai/tool-engineering/scoped-mcp-server-discovery/).
 
-**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
+**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding's **Fix → lesson** link is already resolved by check ID via [`checks.md`](checks.md) **in the report itself** (Output template above); the filed issue reuses that same resolved link — filing never introduces or defers the resolution.
 
 ## Critical rules (read last)
 - **Primitive first, by who invokes** — read-only context is a resource, not a tool.

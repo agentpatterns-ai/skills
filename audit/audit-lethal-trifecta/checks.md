@@ -37,6 +37,23 @@ read-only.
   a pattern that quarantines untrusted content — Dual-LLM, Action-Selector, Plan-Then-Execute,
   Context-Minimization, Code-Then-Execute ([Beurer-Kellner 2025, arXiv:2506.08837](https://arxiv.org/abs/2506.08837)).
   Remediation: [learn — the-lethal-trifecta](https://learn.agentpatterns.ai/security/the-lethal-trifecta/).
+- **Value check before recommending removal:** distinguish *unused* from *optional-but-valuable*. If
+  the path's own text says the capability is genuinely not needed for the task ("does not actually
+  need," redundant, dead weight) — remove it, no quarantine required. If it says the capability is
+  "optional" or "not load-bearing" while still describing it as enrichment/context the output benefits
+  from — that is still real value, not redundancy; don't recommend dropping it, name the specific
+  quarantine pattern above by name instead. "Optional for the core answer" ≠ "unused."
+- **When egress is NOT the path's core deliverable action, and the other two legs are both
+  load-bearing/required, the untrusted-input leg is the leg to fix** — quarantine it as the PRIMARY
+  recommended fix, not deferred to "future work" while some other leg gets a narrower-scope tweak
+  instead. Example: an analyst/reporting agent whose task is to *answer questions* — egress there is
+  just how the answer gets published, not the task itself.
+- **Exception — coding/build/deploy agents keep egress-first as the default, even when egress is how
+  the task's own core action happens (the final push/notify/publish call).** A default-deny egress
+  sandbox / domain allowlist is a one-line deterministic control the model can't override, and it
+  restricts rather than removes the leg — so it still counts as the cheapest-leg fix even when that
+  egress is required, and takes priority over quarantining untrusted input for this agent class (see
+  the "coding/build/deploy agent tie-break" note in the mitigation map below).
 - **Partial leg:** content from a trusted-but-fetched source is lower-risk than open web — note it.
 
 ### LT-EG — External egress
@@ -119,14 +136,17 @@ trifecta or is a config-write grant route; **Medium** when it leaves an ambiguou
 | Pattern | Leg removed | Mechanism |
 |---|---|---|
 | Default-deny egress sandbox | egress | model-independent network block (preferred for coding agents) |
-| **Coding/build agent tie-break:** when the fixture frames *both* untrusted input (e.g. fetched docs)
-  *and* egress (e.g. push/curl) as "convenience, not required," still recommend removing **egress**,
-  not untrusted input. A network block is a one-line deterministic control the model can't override;
-  quarantining untrusted input needs an architectural rework (Dual-LLM / Action-Selector / etc.) —
-  egress removal is cheaper even when the untrusted-input leg also looks optional. |
 | Dual-LLM / Action-Selector / Plan-Then-Execute / Context-Min / Code-Then-Execute | untrusted input | quarantine or fix the action set before untrusted content is trusted |
 | PII tokenization / scoped credentials / file exclusion | private data | strip sensitive data before it enters context |
 | LLM Map-Reduce | private data | each instance sees only a partition |
+
+**Coding/build/deploy agent tie-break:** for this agent class, egress-first stays the default fix even
+when egress is the path's own core deliverable action (the final push/deploy/notify call) — restrict
+it with a default-deny sandbox / domain allowlist rather than quarantining untrusted input instead. A
+network block is a one-line deterministic control the model can't override; quarantining untrusted
+input needs an architectural rework (Dual-LLM / Action-Selector / etc.) — egress-first is cheaper
+whether the untrusted-input leg looks optional (fetched docs as "convenience, not required") or the
+egress leg itself looks required (a deploy's own push/notify call).
 
 Source: [threat model pattern table](https://agentpatterns.ai/security/lethal-trifecta-threat-model/); [Beurer-Kellner 2025](https://arxiv.org/abs/2506.08837); [CaMeL 2025](https://arxiv.org/abs/2503.18813).
 

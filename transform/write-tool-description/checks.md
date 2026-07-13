@@ -107,13 +107,24 @@ implementation concern this transform can note but not author).
 
 ### WD-12 — Invent no behavior (transform fidelity)
 - **Require:** every claim in the output traces to the supplied name/signature/purpose; no
-  hallucinated side-effect, return field, or param; no prose assertion that the tool is "safe".
+  hallucinated side-effect, return field, or param; no prose assertion that the tool is "safe". On an
+  already-compliant input, this is a hard idempotence rule, not just a fabrication rule: an
+  inferred/optional addition that the input gives **no signal for at all** — side effects/idempotency,
+  error-handling/empty-return language, or anything else with zero basis in the name/signature/purpose
+  — is NEVER merged into the returned/corrected definition text, even when hedged as "inferred" or
+  "assumption." Hedging is not an exemption; the returned artifact only contains what the input
+  supports. This does **not** override WD-13: when the name/signature/purpose already implies the
+  answer (a `delete_x` name implies destructive, a pure getter implies read-only), setting the
+  annotation from that evidence is inference, not invention, and WD-13 still requires it.
 - **Why:** an outdated/contradictory description is worse than a terse one — it confidently
   misdirects the agent ([tool-descriptions-as-onboarding §When This Backfires](https://agentpatterns.ai/tool-engineering/tool-descriptions-as-onboarding/));
   and NL prose is not enforcement — runtime permissions enforce safety (factory "nothing invented"
   rule).
-- **How:** when a side-effect/sibling is unknown, state the assumption; don't fabricate it —
-  [schema-and-description-altitude](https://learn.agentpatterns.ai/tool-engineering/schema-and-description-altitude/).
+- **How:** when a side-effect/sibling/annotation has no basis anywhere in the input, do not fabricate
+  it and do not fold a hedged guess into the block; if worth flagging, put it in a separate, clearly
+  optional suggestion **outside** the returned definition text, never inline in it. When the input's
+  own name/signature/purpose already supports the value (per WD-13), set it in the block instead of
+  hedging — [schema-and-description-altitude](https://learn.agentpatterns.ai/tool-engineering/schema-and-description-altitude/).
 
 ### WD-13 — Honest MCP annotations *(↔ TD-9 / TD-10)*
 - **Require:** for an MCP tool, emit the behavior annotations with the block. **Pure reads** carry

@@ -1,8 +1,8 @@
 ---
 name: audit-harness-safety
-description: Audit an agent harness's setup/architecture for blast-radius containment and recovery — OS-level sandbox + least-privilege scope, hard deny floors, reversibility/idempotency, a kill path, and consumption bounds — bounding the *damage* if a control fails. Invoke when hardening a harness for destructive-action safety — before granting write/Bash tools, running an agent headless or in CI, or when it touches the native filesystem, real credentials, shared branches, production, or paid APIs; also when reviewing reversibility/kill-path/cost posture. Skip when the question is data exfiltration or whether a web/network-access grant is safe — the lethal trifecta (use audit-lethal-trifecta), whether an LLM-emitted string or agent-run install can be trusted at the sink (use audit-supply-chain-sinks), workflow-YAML script-injection/token/pin risks (use audit-github-actions-security), or instruction-prose attention/density (use audit-instruction-file).
+description: Audit an agent harness's setup/architecture for blast-radius containment and recovery — OS-level sandbox + least-privilege scope, hard deny floors, reversibility/idempotency, a kill path, and consumption bounds — bounding the *damage* if a control fails. Invoke when hardening a harness for destructive-action safety — before granting write/Bash tools, running an agent headless or in CI, or when it touches the native filesystem, real credentials, shared branches, production, or paid APIs; also when reviewing reversibility/kill-path/cost posture. Skip when the question is data exfiltration or whether a web/network-access grant is safe — the lethal trifecta (use audit-lethal-trifecta), whether an LLM-emitted string or an agent-run package install — even phrased as a sandbox question — can be trusted at the sink (use audit-supply-chain-sinks), workflow-YAML script-injection/token/pin risks (use audit-github-actions-security), or instruction-prose attention/density (use audit-instruction-file).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-harness-safety [path-to-agent-config-or-repo]
 ---
 
@@ -103,7 +103,7 @@ security review); live runtime monitoring (static config audit).
   [idempotent-agent-operations](https://agentpatterns.ai/agent-design/idempotent-agent-operations/),
   [unbounded-consumption-resource-bounds](https://agentpatterns.ai/security/unbounded-consumption-resource-bounds/).
 
-**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
+**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. State all three of title, label, and body **explicitly in the offer text itself** — do not leave the label unstated even when it's the default. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
 
 ## Critical rules (read last)
 - **The sandbox + deny floor are the boundary; a prompt/CLAUDE.md rule is documentation, not enforcement** — recommend the deterministic control.

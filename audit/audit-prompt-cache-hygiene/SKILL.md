@@ -2,7 +2,7 @@
 name: audit-prompt-cache-hygiene
 description: Audit an agent harness — prompt-assembly code, tool-definition serialization, and SDK/CLI cache config — for prompt-cache hygiene — volatile content in the static prefix, non-deterministic or mutated tool enumeration, mid-session model/effort/MCP switches, missing cache-usage monitoring, TTL/idle-shape misfit, cache-busting compaction, and cache-economics misfit. Invoke when reviewing an agent loop / SDK integration / harness that assembles a repeated prompt prefix and calls a hosted model across many turns, to find cache-busting cost regressions. Skip when auditing a prose instruction file's content/attention (use audit-instruction-file), or a single-turn / cold-start / local-no-KV-reuse flow with no prefix to protect.
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-prompt-cache-hygiene [path-to-harness-or-sdk-integration]
 ---
 
@@ -56,7 +56,11 @@ single-turn / cold-start flows (no prefix to protect); local backends without cr
 5. **Recommend the cheapest deterministic fix per finding** (hoist out of loop, `sort_keys`,
    session-fixed model, `excludeDynamicSections`, `cache_control` on the static tail) and **estimate
    the bust frequency** (every call / on switch / per machine). Report with the template below.
-   Done when every finding carries a fix and a bust frequency, and the Prefix map and Findings are filled.
+   Done when every finding carries a fix, a bust frequency, and its resolved Fix → lesson link printed in the row, and the Prefix map and Findings are filled.
+
+**Citations are printed in the report, not deferred.** Each Findings row's Fix → lesson cell must
+carry the check's actual `learn.agentpatterns.ai` URL from `checks.md`, resolved by check ID right
+there in the table — never left as a bare check ID or promised for the filed issue.
 
 ## Output template
 ```
@@ -70,12 +74,12 @@ single-turn / cold-start flows (no prefix to protect); local backends without cr
 | messages | appended (full resend) | yes |
 
 ## Findings
-| Severity | Check | Location | Busts | Deterministic fix |
-|---|---|---|---|---|
-| High | PC-2 tool order | call_model() L41 `load_tools_from_registry()` | every call | hoist + `sorted(..., key=name)` once per session |
-| High | PC-5 per-call system | `build_system_prompt(user=...)` | every call | build once, no per-user injection |
-| High | PC-1 volatile prefix | `f"...{datetime.now()}"` in system | every call | move timestamp to dynamic tail |
-| Med | PC-7 no monitoring | no `usage` inspection | (silent) | log `cache_read` vs `cache_creation` (or provider equivalent) per session |
+| Severity | Check | Location | Busts | Deterministic fix | Fix → lesson |
+|---|---|---|---|---|---|
+| High | PC-2 tool order | call_model() L41 `load_tools_from_registry()` | every call | hoist + `sorted(..., key=name)` once per session | checks.md → PC-2 lesson URL |
+| High | PC-5 per-call system | `build_system_prompt(user=...)` | every call | build once, no per-user injection | checks.md → PC-5 lesson URL |
+| High | PC-1 volatile prefix | `f"...{datetime.now()}"` in system | every call | move timestamp to dynamic tail | checks.md → PC-1 lesson URL |
+| Med | PC-7 no monitoring | no `usage` inspection | (silent) | log `cache_read` vs `cache_creation` (or provider equivalent) per session | checks.md → PC-7 lesson URL |
 
 **Healthy baseline:** near-zero `cache_creation_input_tokens` after turn 1; a mid-session creation
 spike = a prefix change.
@@ -95,7 +99,7 @@ longest) — or a silent monitoring gap; **Low** = economics/TTL tuning (PC-10) 
   [mid-session-config-cache-invalidators](https://agentpatterns.ai/anti-patterns/mid-session-config-cache-invalidators/).
 - Auditor cluster of record: `prompt-cache-stability` (59 source-cited rules).
 
-**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
+**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link, resolved by check ID via [`checks.md`](checks.md), **already printed in the Findings table row** (not deferred to filing time) — the filed issue body just copies that table.
 
 ## Critical rules (read last)
 - **Exact prefix match or nothing** — one mutated byte before the current turn re-pays the whole

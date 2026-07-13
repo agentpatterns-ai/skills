@@ -20,6 +20,11 @@ checks. Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ remediation l
   density; ManyIFEval's "curse of instructions" compounds per-rule failure; each new prohibition
   dilutes attention for the rest ([prompt-tinkerer, Symptoms](https://agentpatterns.ai/anti-patterns/prompt-tinkerer/);
   arXiv:[2507.11538](https://arxiv.org/abs/2507.11538), [2509.21051](https://arxiv.org/abs/2509.21051)).
+- **Required in finding:** state the argument itself, not just the counts — more prose
+  prohibitions do **not** increase compliance; attention is finite and caps around **68%** at high
+  instruction density. Cite the IFScale figure and/or `instruction-compliance-ceiling` /
+  `prompt-tinkerer` (pair with HP-9). Negation/`IMPORTANT:` counts with no "more prose ≠ more
+  compliance" framing is an incomplete finding.
 - **Fix:** relocate the **binary subset** to a hook; stop tinkering with prose.
   → [where-prompting-ends](https://learn.agentpatterns.ai/prompt-engineering/where-prompting-ends/).
 
@@ -27,6 +32,12 @@ checks. Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ remediation l
 - **Flags:** a prose rule that is **non-negotiable + binary + opposed by a training prior** and
   expressible at the tool-call boundary — e.g. "never `git push --force` to main", "use pnpm not npm",
   "no writes to secrets files". Miss any of the three → it correctly stays prose.
+- **Counter-examples — don't blanket-hook a rule set.** A matcher existing is not sufficient; score
+  all three properties per rule. "Avoid absolute paths when creating files" — `avoid`, not `never`,
+  and legitimate exceptions exist — fails **non-negotiable** even though a path-pattern check is easy
+  to write. "Avoid editing `.github/workflows/` without approval" — the path glob is checkable, but
+  the condition it gates ("without approval") is a judgment call no hook can verify — fails
+  **binary**. Both stay prose; see HP-4.
 - **Why:** these three properties are exactly when a hook beats a prompt; a prose rule the model can
   forget or override mid-task is not enforcement ([hooks-vs-prompts, Decision Rule + What Hooks Can
   Enforce](https://agentpatterns.ai/instructions/hooks-vs-prompts/)).

@@ -2,7 +2,7 @@
 name: compress-prompt
 description: Compress any prompt or instruction file to maximize signal per token — convert prose to tables/bullets/rules, front-load critical constraints, and apply semantics-preserving transforms. Invoke when asked to shorten, tighten, densify, or "make this prompt/instruction file more concise". Skip when editing ordinary docs or source code, or when the goal is to detect (not fix) density problems — use audit-instruction-file for that.
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /compress-prompt [path-or-text]
 ---
 

@@ -95,6 +95,9 @@ Entropy alone over-fires; gate it on proximity to a credential-shaped key. A pla
   `https://user:pass@host/`, or `API_KEY=${API_KEY:-sk-live-xyz}` defaults inside a `SKILL.md`; **and**
   no secret-scanner path rule of **any** scanner (e.g. `betterleaks`/`gitleaks`/`trufflehog`/
   `detect-secrets`) covering `.claude/skills/`, `skills/` — the requirement is coverage, not a brand.
+- **Restraint:** a missing scanner-coverage rule alone, with no literal secret-shaped value in any
+  skill example, is **not** an SE-6 finding — never report "no scanner config visible" as a finding
+  by itself. SE-6 fires on the literal; the scanning-gap note only attaches to a literal already found.
 - **Why:** skills are reusable artifacts that ship a working example from the author's environment;
   they leak via publication, git history, and verbatim reproduction — a runtime-only secrets control
   does not cover the file itself ([credential-hygiene-agent-skills](https://agentpatterns.ai/security/credential-hygiene-agent-skills/)).
@@ -108,6 +111,10 @@ Entropy alone over-fires; gate it on proximity to a credential-shaped key. A pla
 ### SE-7 — System prompt used as a secret / control store (OWASP LLM07)
 - **Flags:** credentials/connection strings, internal business rules (transaction/loan limits),
   filtering criteria, or role/permission tables placed in a system prompt and relied on as confidential.
+- **Enumerate every instance:** when one cited block carries multiple distinct control-logic-in-prompt
+  items (e.g. several dollar-limit rules, a permission-tier flag, a cross-user-refusal/authorization
+  rule), the finding must name **all** of them, not just the one or two most obvious — a partial list
+  under-reports the exposure even when the line range cited is correct.
 - **Why:** the system prompt is recoverable input — there is no privilege boundary inside the context
   window; multi-turn extraction reaches 84–92% ASR and a tool-invocation channel recovered it at 0.997
   similarity. The bug is the design choice to trust prompt confidentiality, not the leak that follows
@@ -119,14 +126,16 @@ Entropy alone over-fires; gate it on proximity to a credential-shaped key. A pla
 
 ---
 
-## SE-8 (optional, auditor-only — no deep corpus page)
-
-Internal hostnames / staging URLs / private subdomains leaked into instruction files (`.local`,
-`.internal`, `.corp`, `staging-*`, `dev-*`, `jumpbox`, `bastion`) carry reconnaissance value. This is
-backed by the project-auditor `secrets-and-credentials` cluster only (`agent-readiness/audit-secrets-in-context.md`),
-**not** a deep agentpatterns.ai/security corpus page. Surface it as a **low-tier informational note**, not a
-normative finding, until a primary corpus cite is confirmed. Do not paper over the gap. Remediation
-(closest): [learn — keep-the-keys-out](https://learn.agentpatterns.ai/security/keep-the-keys-out/).
+### SE-8 — Internal hostname / staging URL disclosure (optional, auditor-only)
+- **Flags:** internal hostnames / staging URLs / private subdomains leaked into instruction files
+  (`.local`, `.internal`, `.corp`, `staging-*`, `dev-*`, `jumpbox`, `bastion`).
+- **Why:** a hostname alone grants no access, but it names a target — the same naming patterns are
+  literal entries in mainstream reconnaissance wordlists, and exposed repos are documented to leak
+  "infrastructure intel" (hostnames, IPs, ports) as a category distinct from credentials
+  ([internal-hostname-disclosure-agent-context](https://agentpatterns.ai/security/internal-hostname-disclosure-agent-context/)).
+- **Fix:** extend the credential-format regex sweep to internal-naming patterns; replace a real
+  hostname in a committed instruction file with a placeholder and inject it at runtime. Remediation:
+  [learn — keep-the-keys-out](https://learn.agentpatterns.ai/security/keep-the-keys-out/). **Severity Low** — informational, not a normative High/Medium finding.
 
 ---
 
@@ -135,7 +144,7 @@ normative finding, until a primary corpus cite is confirmed. Do not paper over t
 |---|---|---|
 | High | SE-1, SE-2 (literal), SE-3, SE-6 (literal) | env injection / wrapper / `permissions.deny` + `PreToolUse` hook / placeholders — **and rotate** |
 | Medium | SE-4, SE-5, SE-7, SE-2 (pattern) | short-lived WIF token / `follow_redirects=False` + index gate / externalise from prompt |
-| Low | SE-6 (scanning gap), SE-8 | extend secret-scanning to skill dirs; informational recon note |
+| Low | SE-6 (scanning gap), SE-8 (recon note) | extend secret-scanning to skill dirs; informational recon note |
 
 A High finding **halts** the rest of an agent-readiness assessment until the secret is rotated
 (auditor `secrets-and-credentials` cluster: secret-exposure is the first audit to run).

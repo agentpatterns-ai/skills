@@ -2,7 +2,7 @@
 name: audit-memory-retrieval-integrity
 description: Audit a retrieval or memory layer — RAG config, vector-store queries, agent memory stores, knowledge-graph tool-use — for the retrieval-boundary authorization-and-integrity gap — cross-tenant chunk bleed, agent-supplied tenant identity, untokenized PII in retrieved context, and retrieved/remembered content trusted as fact-or-instruction with no provenance tier. Invoke when reviewing a RAG / vector-store / agent-memory pipeline, a multi-tenant retrieval path, or before wiring retrieved chunks into model context. Skip when the concern is the input-side three-leg data-flow of one execution path (use audit-lethal-trifecta), credential / secret hygiene (use audit-secret-exposure), or validating an LLM's output before it reaches a sink (use audit-supply-chain-sinks).
 user-invocable: true
-version: "0.2.1"
+version: "0.3.0"
 usage: /audit-memory-retrieval-integrity [path-to-retrieval-or-memory-code]
 ---
 
@@ -52,8 +52,17 @@ with no shared index, or a public corpus with no access tiers — nothing to lea
    RAG / oracle / memory poisoning). Mark **partial** states (post-only filter, regex-only PII) — do not
    zero an ambiguous control to "No".
    Done when every boundary × MR check is marked present/partial/absent.
-3. **Flag each gap** with severity (below) and the cited why.
-   Done when every flagged gap has both a severity and a citation recorded.
+3. **Flag each gap** with severity (below) and the cited why. Raise a detector only when the target
+   artifact shows its flag condition directly — no ingest path, no untrusted writer, no PII field means
+   that detector does not fire, even hedged as "partial" or "for verification". A plausible-but-unconfirmed
+   concern (e.g. corpus writability unknown, PII schema unclear) is an open question named in prose, never
+   a scored Findings-table row. A call site that meets the detector's own PASS bar (e.g. a pre-filter
+   bound server-side to the principal, not just a post-filter) is **clean** — credit it in prose, never
+   score a Findings row against it to look thorough; per-call-site auditing means judging each site on
+   its own evidence, not projecting one site's defense-in-depth wishlist onto a different, correctly-built
+   site.
+   Done when every flagged gap has both a severity and a citation recorded, and no Findings row lacks
+   direct evidence in the audited artifact.
 4. **Recommend the deterministic fix at the boundary** — pre-filter, server-bound tenant id, code-level
    tokenizer, provenance tier, read-only KG — preferring a control the model can't reason around over a
    prompt mitigation. Remediation lessons resolve per check ID via [`checks.md`](checks.md) — the
