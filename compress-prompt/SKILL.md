@@ -2,7 +2,7 @@
 name: compress-prompt
 description: Compress any prompt or instruction file to maximize signal per token — convert prose to tables/bullets/rules, front-load critical constraints, and apply semantics-preserving transforms. Invoke when asked to shorten, tighten, densify, or "make this prompt/instruction file more concise". Skip when editing ordinary docs or source code, or when the goal is to detect (not fix) density problems — use audit-instruction-file for that.
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /compress-prompt [path-or-text]
 ---
 
@@ -27,8 +27,8 @@ before and after; any regression holds the compression rather than shipping it (
 ## Stance
 
 - **Recommend by default.** Show before/after; apply in place only on explicit confirmation.
-- **Semantics-preserving only.** Strip ceremony, never meaning. Dropping a constraint, a
-  conditional, or compliance-critical rationale is a bug, not a compression. When the target carries
+- **Preserve meaning; strip ceremony only.** Dropping a constraint, a conditional, or
+  compliance-critical rationale is a bug, not a compression. When the target carries
   an eval suite this is enforced **behaviorally** — green before and after, or the compression is
   held (go/no-go is the eval result, never the token delta).
 - **Do not invent precedence or restructure governance.** Criticality and ordering among *ambiguous*
@@ -79,8 +79,8 @@ before and after; any regression holds the compression rather than shipping it (
 
 Naive "make it shorter" breaks both — the non-obvious edges:
 
-- **Don't strip meaning.** Cut ceremony freely; never cut high-density tokens (rationale, conditionals,
-  disambiguating names). Removing them shifts interpretive burden to reasoning — a 17% input-token cut
+- **Preserve high-density tokens** — rationale, conditionals, disambiguating names — cut ceremony
+  freely. Removing them shifts interpretive burden to reasoning — a 17% input-token cut
   raised total session cost **67%** ([semantic-density-optimization](https://agentpatterns.ai/context-engineering/semantic-density-optimization/); [Ustynov 2026, arXiv:2604.07502](https://arxiv.org/abs/2604.07502); Remediation: [learn — signal-per-token](https://learn.agentpatterns.ai/context-engineering/signal-per-token/)).
   Step 6's inventory diff enforces this.
 - **Compress decisively, not halfway.** Constraint violations peak at *medium* compression — a U-curve
@@ -115,8 +115,8 @@ Techniques applied: <e.g. prose→table, structural move of <topic> to a skill>
 
 ## Critical rules (read last)
 
-- **Semantics-preserving only.** Dropping a constraint, a conditional, or compliance-critical
-  rationale is a bug, not a compression. For a target with an eval suite this is **eval-gated** —
+- **Dropping a constraint, a conditional, or compliance-critical rationale is a bug, not a
+  compression.** For a target with an eval suite this is **eval-gated** —
   green before and after, or hold the compression and name the suspected dropped detector
   ([`eval-gate.md`](eval-gate.md)); the eval result is the go/no-go, never the token delta.
 - **Recommend; apply only on explicit confirmation.** Show before/after; never invent precedence or

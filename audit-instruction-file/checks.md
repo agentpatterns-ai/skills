@@ -4,6 +4,20 @@ Loaded on demand by `audit-instruction-file`. The full `CE-1…CE-10` checks (th
 `SKILL.md` points here), the principles behind them, and how to add a check. Each check is
 self-contained: an ID, what it **Flags**, **Why** (with a source), and the **Fix**.
 
+## Contents
+- [CE-1 — Wasted recency slot](#ce-1--wasted-recency-slot)
+- [CE-2 — Hard guardrails in the dead middle](#ce-2--hard-guardrails-in-the-dead-middle)
+- [CE-3 — Oversized file / large dead middle](#ce-3--oversized-file--large-dead-middle)
+- [CE-4 — Discoverable content (bloat)](#ce-4--discoverable-content-bloat)
+- [CE-5 — Contradiction / unresolved layering](#ce-5--contradiction--unresolved-layering)
+- [CE-6 — Layer hygiene](#ce-6--layer-hygiene)
+- [CE-7 — Composition corrupts the assembled curve](#ce-7--composition-corrupts-the-assembled-curve)
+- [CE-8 — Compliance ceiling](#ce-8--compliance-ceiling)
+- [CE-9 — Cache-busting volatile content in the prefix](#ce-9--cache-busting-volatile-content-in-the-prefix)
+- [CE-10 — Low semantic density (ceremony / filler)](#ce-10--low-semantic-density-ceremony--filler)
+- [Principles (why these checks exist)](#principles-why-these-checks-exist)
+- [Expanding this skill](#expanding-this-skill)
+
 ## CE-1 — Wasted recency slot
 - **Flags:** the closing section is a footer (links, related, changelog, credits, low-stakes
   housekeeping) rather than a rule that must be obeyed.

@@ -8,6 +8,17 @@ The unifying rule (OWASP LLM05): trust does not transfer through a string bounda
 sink, not at the source ([improper-output-handling-downstream-sinks](https://agentpatterns.ai/security/improper-output-handling-downstream-sinks/)).
 Remediation lesson for SS-1/2/5/6/7/8: [the-output-is-untrusted-too](https://learn.agentpatterns.ai/security/the-output-is-untrusted-too/).
 
+## Contents
+- [SS-1 — Model string reaches `exec`/`eval`/shell (RCE)](#ss-1--model-string-reaches-execevalshell-with-no-per-sink-gate-rce)
+- [SS-2 — SQL built by string-concatenating LLM output (SQLi)](#ss-2--sql-built-by-string-concatenating-llm-output-sqli-cve-2025-1793-class)
+- [SS-3 — Install authority ungated (slopsquatting)](#ss-3--install-authority-ungated-by-lockfile--existence-check-slopsquatting)
+- [SS-4 — Slopsquatting "defended" by edit-distance detection](#ss-4--slopsquatting-defended-by-edit-distance--typosquat-detection-mis-targeted-control)
+- [SS-5 — Model output rendered without encoding/CSP (XSS + exfil)](#ss-5--model-output-rendered-in-an-auto-interpreting-surface-without-encodingcspfetch-gating-xss--image-exfil)
+- [SS-6 — File path built from LLM output without canonicalisation](#ss-6--file-path-built-from-llm-output-without-canonicalisation--base-dir-constraint-traversal)
+- [SS-7 — Tool/RAG output fed to a downstream LLM as trusted instructions](#ss-7--toolrag-output-fed-back-into-a-downstream-llm-as-trusted-instructions-re-injection-sink)
+- [SS-8 — LLM05 conflated with LLM06 (false-safe scoping)](#ss-8--llm05-conflated-with-llm06-false-safe-scoping)
+- [SS-9 — Anti-theatre / false-positive guard](#ss-9--anti-theatre--false-positive-guard-do-not-flag)
+
 ---
 
 ## SS-1 — Model string reaches `exec`/`eval`/shell with no per-sink gate (RCE)

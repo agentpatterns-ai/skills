@@ -4,6 +4,10 @@ Loaded on demand by `audit-tool-definition`. Run each detector against every too
 scope. Each item: ID / **Flags** / **Why** (cited corpus) / **Fix** (remediation lesson). All
 detection is read-only — flag and recommend, never rewrite (that is `write-tool-description`).
 
+## Contents
+- [Core ergonomics (TD-1…TD-4, TD-6, TD-8…TD-10)](#core-ergonomics-first-class)
+- [Tail — load on demand / advisory (TD-5, TD-7, TD-11, TD-12)](#tail-load-on-demand--advisory)
+
 ---
 
 ## Core ergonomics (first-class)
@@ -70,7 +74,9 @@ detection is read-only — flag and recommend, never rewrite (that is `write-too
   write); a pure read missing `readOnlyHint:true`. *Advisory (not a violation):* a pure read missing
   the rest of the read-only triple (`idempotentHint:true`, `destructiveHint:false`) — the MCP spec
   makes those two hints meaningful only when `readOnlyHint==false`
-  ([MCP spec — schema, *ToolAnnotations*](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations)),
+  ([MCP spec — schema, *ToolAnnotations*](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations) —
+  the spec version advances; reconfirm the cited section against the current spec if this detector's
+  behavior looks stale),
   so a bare `readOnlyHint:true` is
   spec-conformant; still recommend the full triple (harness recovery paths read it anyway).
 - **Why:** annotations are load-bearing once a harness wires `readOnlyHint` into parallel dispatch — a

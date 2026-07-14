@@ -2,7 +2,7 @@
 name: audit-observability-setup
 description: Audit an agent harness's observability setup — is a long/autonomous/multi-agent run legible enough to confirm it worked and catch it when it fails — OTel exporters, maxTurns + loop-detection circuit breakers, agent_id trace propagation, per-source context attribution, a wired regression gate, and a trajectory trail. Invoke when reviewing or building a harness that runs long, autonomous, or multi-agent work (settings.json hooks/telemetry, subagent instrumentation, CI eval gates, progress files). Skip when a single-shot/stateless prompt has nothing to instrument, or when judging whether a gate's grading is correct (use audit-verification-gates) rather than whether observability is wired.
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-observability-setup [path-to-agent-config-or-repo]
 ---
 

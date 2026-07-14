@@ -4,6 +4,18 @@ Loaded on demand by `audit-mcp-server`. Run one pass per tool, plus a server-lev
 Each item: ID / **Flags** / **Why** (cited) / **Fix**. All detection is read-only. Severity in the
 intro of each check is the default; downgrade only with a stated reason.
 
+## Contents
+- [MS-1 — Wrong primitive](#ms-1--wrong-primitive-high)
+- [MS-2 — Non-conforming tool names](#ms-2--non-conforming-tool-names-med)
+- [MS-3 — Input schema without guardrails](#ms-3--input-schema-without-guardrails-med)
+- [MS-4 — Missing / unpaired output contract](#ms-4--missing--unpaired-output-contract-med)
+- [MS-5 — Dishonest or absent behavior annotations](#ms-5--dishonest-or-absent-behavior-annotations-high)
+- [MS-6 — Generic errors / wrong error channel](#ms-6--generic-errors--wrong-error-channel-high)
+- [MS-7 — Bloated / preloaded surface](#ms-7--bloated--preloaded-surface-high)
+- [MS-8 — Discoverability / version-stability defects](#ms-8--discoverability--version-stability-defects-med)
+- [MS-9a — Transport fit](#ms-9a--transport-fit-advisory)
+- [MS-9b — Unsanitized inputs](#ms-9b--unsanitized-inputs-high)
+
 ---
 
 ### MS-1 — Wrong primitive *(High)*

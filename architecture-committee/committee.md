@@ -3,6 +3,12 @@
 Loaded on demand by `architecture-committee`. The roster, the bias catalog, the round protocol, and
 the convergence guard — each grounded in the same primary sources as the skill body.
 
+## Contents
+- [Default persona panel](#default-persona-panel-adapt-to-the-spec-dropadd-voices-the-decision-turns-on)
+- [Named-bias catalog](#named-bias-catalog-each-persona-calls-out-the-bias-it-suspects-in-cross-examination)
+- [Debate-round protocol](#debate-round-protocol-3-rounds--hard-cap)
+- [Convergence guard](#convergence-guard-run-before-presenting)
+
 ---
 
 ## Default persona panel (adapt to the spec; drop/add voices the decision turns on)

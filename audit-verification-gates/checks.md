@@ -4,6 +4,19 @@ Loaded on demand by `audit-verification-gates`. Classify each completion gate ag
 run the floor guard (VG-11) before emitting any finding. Each item: ID / **Flags** / **Why** (cited corpus
 page = evidence) / **Fix** (lesson = remediation). All detection is read-only.
 
+## Contents
+- [VG-1 — Prose-only completion gate](#vg-1--prose-only-completion-gate)
+- [VG-2 — Stopping criterion not tied to observable external state](#vg-2--stopping-criterion-not-tied-to-observable-external-state)
+- [VG-3 — Vague / unverifiable gate items (gate theater)](#vg-3--vague--unverifiable-gate-items-gate-theater)
+- [VG-4 — Verification recorded as prose, not a structured ledger](#vg-4--verification-recorded-as-prose-not-a-structured-ledger)
+- [VG-5 — Execution and recording not separated](#vg-5--execution-and-recording-not-separated-gameable-ledger--non-independent-verifier)
+- [VG-6 — Verifier weaker than the generator / LLM-judge anchors a mechanical check](#vg-6--verifier-weaker-than-the-generator--llm-judge-anchors-a-mechanical-check)
+- [VG-7 — Verification only at the end](#vg-7--verification-only-at-the-end--no-checkpoints-between-stages-no-baseline)
+- [VG-8 — Path-based grading instead of outcome/state-based](#vg-8--path-based-grading-instead-of-outcomestate-based)
+- [VG-9 — Mutable tests in the green phase](#vg-9--mutable-tests-in-the-green-phase--no-test-lock-reward-hacking-surface)
+- [VG-10 — No restart-clean completion gate](#vg-10--no-restart-clean-completion-gate--non-grep-able-failure-signals)
+- [VG-11 — Gate ceremony below its floor (false-positive guard)](#vg-11--gate-ceremony-below-its-floor-false-positive-guard--applicability)
+
 ---
 
 ### VG-1 — Prose-only completion gate

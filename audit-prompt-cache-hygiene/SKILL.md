@@ -2,7 +2,7 @@
 name: audit-prompt-cache-hygiene
 description: Audit an agent harness — prompt-assembly code, tool-definition serialization, and SDK/CLI cache config — for prompt-cache hygiene — volatile content in the static prefix, non-deterministic or mutated tool enumeration, mid-session model/effort/MCP switches, missing cache-usage monitoring, TTL/idle-shape misfit, cache-busting compaction, and cache-economics misfit. Invoke when reviewing an agent loop / SDK integration / harness that assembles a repeated prompt prefix and calls a hosted model across many turns, to find cache-busting cost regressions. Skip when auditing a prose instruction file's content/attention (use audit-instruction-file), or a single-turn / cold-start / local-no-KV-reuse flow with no prefix to protect.
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-prompt-cache-hygiene [path-to-harness-or-sdk-integration]
 ---
 

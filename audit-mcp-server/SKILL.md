@@ -2,7 +2,7 @@
 name: audit-mcp-server
 description: Audit an MCP server's own declaration — primitive choice (tool/resource/prompt), tool naming, input/output schemas, behavior annotations, error channels, transport fit, server instructions, and tool-count/token budget — the design-rule slice of the MCP spec plus agent-friendliness rules. Invoke when authoring, reviewing, or publishing an MCP server, or vetting a third-party server before wiring it in. Skip when auditing individual tool definitions' ergonomics or verifying annotations against their implementation — even for tools an MCP server exposes (use audit-tool-definition) or the whole agent harness's exfiltration/security architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-mcp-server [path-to-mcp-server-source-or-manifest]
 ---
 

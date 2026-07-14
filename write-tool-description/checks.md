@@ -7,6 +7,10 @@ must satisfy — and the defect it removes from a terse input. Item shape: ID / 
 WD-6/7↔TD-4), not 1:1; TD-7 (graceful truncation) stays detector-only (an output-contract
 implementation concern this transform can note but not author).
 
+## Contents
+- [Core, always (WD-1…WD-10)](#core-always)
+- [Guardrails (WD-11…WD-13)](#guardrails-the-two-this-skill-must-not-transform-away)
+
 ---
 
 ## Core (always)

@@ -2,7 +2,7 @@
 name: audit-multi-agent-orchestration
 description: Audit an existing multi-agent orchestration's coordination mechanics — typed vs prose handoffs, shared mid-run state, verifier/producer role separation, and loop bounds — and flag the structural smells that make multi-agent systems fail. Invoke when reviewing or hardening a harness that already runs more than one agent (orchestrator-worker, fan-out/synthesis, lead-and-teammates, generator-critic loops), including whether the verifier role is independent of the producer. Skip when deciding whether to go multi-agent at all or which topology (use architecture-committee), auditing the general completion-gating architecture — hooks, ledgers, graders, red-green anchoring (use audit-verification-gates), auditing security legs / prompt-injection (use audit-lethal-trifecta), or a single instruction file's prose (use audit-instruction-file).
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-multi-agent-orchestration [path-to-harness-or-repo]
 ---
 

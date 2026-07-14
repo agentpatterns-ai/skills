@@ -5,6 +5,11 @@ memory call site. Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ les
 walk-through). All detection is read-only. Two families: **authorization** (MR-A*) and **integrity**
 (MR-I*).
 
+## Contents
+- [Authorization family (MR-A1…MR-A5)](#authorization-family--who-may-see-this-chunk)
+- [Integrity family (MR-I1…MR-I3)](#integrity-family--is-this-chunk-trustable)
+- [Detector → family map](#detector--family-map-for-the-report)
+
 ---
 
 ## Authorization family — who may see this chunk
@@ -47,8 +52,10 @@ walk-through). All detection is read-only. Two families: **authorization** (MR-A
   per-tenant `cwd`, and per-tenant egress.
 - **Why:** by default the SDK loads filesystem settings (whenever `settingSources` is omitted —
   `settingSources: []` blocks them), while global config and auto-memory are read **regardless of
-  `settingSources`** and need their own knobs (`CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_DISABLE_AUTO_MEMORY`);
-  each pathway is a cross-tenant leak in a shared container, and session-keyed state carries
+  `settingSources`** and need their own knobs (`CLAUDE_CONFIG_DIR`, `CLAUDE_CODE_DISABLE_AUTO_MEMORY`) —
+  this is the SDK's current default behavior and may change across SDK versions; verify against the
+  installed SDK version rather than trusting this description to stay accurate. Each pathway is a
+  cross-tenant leak in a shared container, and session-keyed state carries
   one tenant's data forward across an identity switch
   ([isolation-knobs](https://agentpatterns.ai/security/multi-tenant-isolation-knobs-agent-sdk/);
   [gap, *Context accumulation*](https://agentpatterns.ai/security/multitenant-rag-authorization-gap/)).

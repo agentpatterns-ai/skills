@@ -4,6 +4,20 @@ Loaded on demand by `audit-observability-setup`. Each item: ID / **Flags** / **W
 the "why") / **Fix** (cited lesson = the "how"). All detection is read-only. Before flagging, apply the
 **run-shape suppression table at the end of this file** — it is the single source for what to skip.
 
+## Contents
+- [OBS-1 — No telemetry exporter enabled](#obs-1--no-telemetry-exporter-enabled)
+- [OBS-2 — No runtime circuit breaker](#obs-2--no-runtime-circuit-breaker-maxturns-absent-on-open-ended-work)
+- [OBS-3 — No loop detection wired](#obs-3--no-loop-detection-wired)
+- [OBS-4 — Instruction-level stop where runtime enforcement is required](#obs-4--instruction-level-stop-where-runtime-enforcement-is-required)
+- [OBS-5 — Multi-agent harness without dual-surface `agent_id` propagation](#obs-5--multi-agent-harness-without-dual-surface-agent_id-propagation-suppress-if-single-agent)
+- [OBS-6 — Off-protocol egress drops agent identity](#obs-6--off-protocol-egress-drops-agent-identity-suppress-if-single-agent)
+- [OBS-7 — No per-source context attribution](#obs-7--no-per-source-context-attribution--untrustworthy-denominator-suppress-if-minimal-source)
+- [OBS-8 — No regression gate wired](#obs-8--no-regression-gate-wired-or-feedback-not-coupled-to-the-trace)
+- [OBS-9 — No trajectory trail / premature-completion guard](#obs-9--no-trajectory-trail--premature-completion-guard)
+- [OBS-10 — Signals not legible to the agent](#obs-10--signals-not-legible-to-the-agent-write-and-hope--blind-agent-trap)
+- [Severity](#severity)
+- [Run-shape suppression](#run-shape-suppression-do-not-false-positive)
+
 ---
 
 ## OBS-1 — No telemetry exporter enabled

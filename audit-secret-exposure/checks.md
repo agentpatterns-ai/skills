@@ -4,6 +4,11 @@ Loaded on demand by `audit-secret-exposure`. Scan each agent-readable surface wi
 Each item: ID / **Flags** / **Why** (cited) / **Fix** (deterministic). All detection is read-only;
 **redact every literal** in output — report the shape and location, not the value.
 
+## Contents
+- [Credential-format regex (SE-1 / SE-6 matchers)](#credential-format-regex-se-1--se-6-matchers)
+- [Detectors (SE-1…SE-8)](#detectors)
+- [Severity → fix summary](#severity--fix-summary)
+
 ---
 
 ## Credential-format regex (SE-1 / SE-6 matchers)

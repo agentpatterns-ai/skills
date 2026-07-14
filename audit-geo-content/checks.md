@@ -5,6 +5,12 @@ Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ remediation lesson). 
 read-only. Several checks are *deterministic* (heading grep, word-count, page-floor, llms.txt
 existence) — prefer them over judgement.
 
+## Contents
+- [Applicability guard — run first (GEO-G1)](#applicability-guard--run-first)
+- [Structure — chunkability (GEO-S1…GEO-S5)](#structure--chunkability-per-page)
+- [Substance — assertion density (GEO-D1…GEO-D3)](#substance--assertion-density-per-major-h2)
+- [Machine-readability (GEO-M1…GEO-M3)](#machine-readability-once-per-corpus)
+
 ---
 
 ## Applicability guard — run first
@@ -145,7 +151,9 @@ existence) — prefer them over judgement.
   **live-fetch** block (not indexing-time hygiene like M1/M2), and **fatal to citability**. The
   recommended policy is three-tier: **allow** retrieval / **disallow** training (advisory) / **WAF-block**
   non-compliant. robots.txt is **advisory, not enforceable** — `ChatGPT-User` was exempted (Dec 2025)
-  and Perplexity rotates user-agents/ASNs to evade it — so any *hard* block needs a CDN/WAF rule, not
+  and Perplexity rotates user-agents/ASNs to evade it (bot names and exemption status are provider
+  policy and change — verify the current list against the cited ai-crawler-policy source before
+  relying on this enumeration) — so any *hard* block needs a CDN/WAF rule, not
   a robots.txt line ([ai-crawler-policy](https://agentpatterns.ai/geo/ai-crawler-policy/);
   [Cloudflare, Aug 2025](https://blog.cloudflare.com/perplexity-is-using-stealth-undeclared-crawlers-to-evade-website-no-crawl-directives/)).
 - **Fix:** allow Tier-1 retrieval bots; enforce non-compliant blocks at CDN/WAF — never rely on

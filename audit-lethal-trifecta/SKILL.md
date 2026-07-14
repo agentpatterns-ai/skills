@@ -2,7 +2,7 @@
 name: audit-lethal-trifecta
 description: Audit an agent / sub-agent / MCP setup for the lethal trifecta — private-data access + untrusted-content exposure + external egress on one execution path — and flag the prompt-injection and exfiltration routes it opens. Invoke when reviewing or hardening an agent harness's security architecture (sub-agent tool allowlists, MCP servers, permissions, sandbox/egress config) or before deciding if granting an agent new tools, data, or web/network access is safe (e.g. a RAG/vector-store agent gaining web access). Skip when the ask is literal secrets in context (use audit-secret-exposure), LLM-output sinks or agent-run installs (use audit-supply-chain-sinks), blast-radius/reversibility containment (use audit-harness-safety), retrieval-boundary authorization with no egress leg (use audit-memory-retrieval-integrity), instruction-file content/attention (use audit-instruction-file), or reviewing application source code for vulnerabilities (use a general security review).
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-lethal-trifecta [path-to-agent-config-or-repo]
 ---
 

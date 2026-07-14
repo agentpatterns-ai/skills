@@ -3,6 +3,10 @@
 Loaded on demand by `write-skill`. Apply each requirement while drafting. Each item: ID /
 **Flags** (the defect it prevents) / **Why** (cited corpus) / **Fix** (remediation lesson).
 
+## Contents
+- [Core (WS-1…WS-10)](#core-ws-1ws-10)
+- [Tail — advisory (WS-11…WS-12)](#tail-load-on-demand--advisory)
+
 ---
 
 ## Core (WS-1…WS-10)

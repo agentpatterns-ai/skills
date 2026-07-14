@@ -2,7 +2,7 @@
 name: audit-geo-content
 description: Audit a documentation / content-markdown corpus for AI answer-engine retrieval and citability (GEO) — chunkability (answer-first, atomic, descriptive headings), assertion density, and machine-readable signals (llms.txt, schema). Invoke when reviewing or hardening published docs for AI citation / generative-engine visibility ("is this page citable by ChatGPT/Perplexity/Claude?", a GEO review, or before/after a docs restructure aimed at retrieval). Skip when auditing agent-harness config — tool allowlists, MCP, sandbox/egress (use audit-lethal-trifecta) — or instruction-file prose/attention such as a SKILL.md or CLAUDE.md (use audit-instruction-file); and suppress for private / non-indexed docs.
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-geo-content [path-to-docs-corpus]
 ---
 

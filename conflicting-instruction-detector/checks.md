@@ -13,11 +13,22 @@ the "likely-not-a-conflict" list so the false-positive surface is visible, not h
 > conflict; it belongs in likely-not-a-conflict, never at Rank 1. The lexical opposition is a lure;
 > the overlap gate is what catches it.
 
-> Posture: detection of cross-document **semantic** conflict is unreliable — Claude-3.5-Sonnet scores
-> 92.7% on same-type (intra-constraint) but only 74.6% on cross-type (inter-constraint) conflicts,
-> bottoming at 60.3% F1 ([ConInstruct, arXiv:2511.14342](https://arxiv.org/abs/2511.14342)). So
-> CI-2/CI-4 (the semantic classes) carry the most false positives — rank them by *cost*, present them
-> as candidates, and never let the skill resolve them.
+> Posture: detection of cross-document **semantic** conflict is unreliable enough to justify a
+> read-only design — Claude-3.5-Sonnet was measured at 92.7% on same-type (intra-constraint) but only
+> 74.6% on cross-type (inter-constraint) conflicts, bottoming at 60.3% F1 ([ConInstruct,
+> arXiv:2511.14342](https://arxiv.org/abs/2511.14342)); model capability on this task will drift — the
+> qualitative gap, not the exact figures, is what justifies the design. So CI-2/CI-4 (the semantic
+> classes) carry the most false positives — rank them by *cost*, present them as candidates, and never
+> let the skill resolve them.
+
+## Contents
+- [CI-1 — Direct cross-document contradiction](#ci-1--direct-cross-document-contradiction-lexically-alignable)
+- [CI-2 — Mutually-unsatisfiable constraints](#ci-2--mutually-unsatisfiable-constraints-semantic--low-precision)
+- [CI-3 — Unresolved cross-document precedence](#ci-3--unresolved-cross-document-precedence)
+- [CI-4 — Scope / applicability collision](#ci-4--scope--applicability-collision-semantic--low-precision)
+- [CI-5 — Cross-document drift duplication](#ci-5--cross-document-drift-duplication)
+- [Triage — ranking the review queue](#triage--ranking-the-review-queue)
+- [What this skill must never do](#what-this-skill-must-never-do)
 
 ---
 

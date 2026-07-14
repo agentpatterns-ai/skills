@@ -4,6 +4,12 @@ Loaded on demand by `audit-lethal-trifecta`. Classify each execution path on the
 the attack-route checks. Each item: ID / **Flags** / **Why** (cited) / **Fix**. All detection is
 read-only.
 
+## Contents
+- [Leg detectors (LT-PD, LT-UI, LT-EG)](#leg-detectors--classify-each-path)
+- [Attack-route checks (LT-A1…LT-A4)](#attack-route-checks--paths-that-acquire-a-leg)
+- [Leg → mitigation map](#leg--mitigation-map-for-recommendations)
+- [Sandbox controls checklist](#sandbox-controls-checklist-when-recommending-hardening)
+
 ---
 
 ## Leg detectors — classify each path

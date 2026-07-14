@@ -4,6 +4,12 @@ Loaded on demand by `audit-harness-safety`. Run per execution path. Each item: I
 **Why** (cited) / **Fix** (deterministic, with remediation lesson). All detection is read-only.
 Group A = containment (cap the radius), B = recovery (undo the damage), C = duration/cost (stop it).
 
+## Contents
+- [A — Containment (HS-1…HS-4)](#a--containment-cap-the-blast-radius)
+- [B — Recovery (HS-5…HS-7)](#b--recovery-undo-the-damage)
+- [C — Duration & cost (HS-8…HS-9)](#c--duration--cost-stop-it)
+- [Advisory (HS-10)](#advisory)
+
 ---
 
 ## A — Containment: cap the blast radius

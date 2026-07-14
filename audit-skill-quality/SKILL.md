@@ -2,7 +2,7 @@
 name: audit-skill-quality
 description: Audit one or many SKILL.md files against dispatch (frontmatter) and governance (body) quality criteria — description overlap and missing skip-boundaries, absent required fields, attention-curve/length/compliance-ceiling defects, self-containment and progressive-disclosure violations, prompt-only guardrails standing in for real enforcement, missing step-completion criteria, degrees-of-freedom mismatches, and untestable output — and produce a review writeup. Invoke when reviewing, grading, or vetting a SKILL.md before it ships, or figuring out why a skill won't dispatch or misbehaves once loaded. Skip when the goal is to write or substantially revise a SKILL.md (use write-skill), auditing a plain instruction file that isn't a SKILL.md (use audit-instruction-file), auditing an individual tool/function definition rather than a whole skill (use audit-tool-definition), or shrinking a prompt under a token budget (use compress-prompt).
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-skill-quality [path-to-SKILL.md-or-dir]
 ---
 

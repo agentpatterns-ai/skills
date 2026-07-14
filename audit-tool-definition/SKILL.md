@@ -2,7 +2,7 @@
 name: audit-tool-definition
 description: Audit one or many individual agent-facing tool/function definitions — name, description, inputSchema, output/error contract, and MCP annotations — for the ergonomics failures that make an agent mis-select or misuse a tool, and emit a findings report. Invoke when reviewing the quality of individual tool definitions (function-calling specs, or the per-tool defs an MCP server exposes) or diagnosing why an agent picks or calls a tool wrong. Skip when the goal is to produce the corrected description/schema for one tool (use write-tool-description), to audit an MCP server's own declaration — primitive choice, transport, server instructions, tool-count budget, annotation presence/defaults — rather than its individual tool defs (use audit-mcp-server), or to audit per-path data/egress security architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-tool-definition [path-to-tool-defs-or-mcp-config]
 ---
 

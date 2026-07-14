@@ -7,6 +7,12 @@ checks. Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ remediation l
 > Core distinction: prompts *request*, hooks *require*. A hook runs outside the context window — the
 > model cannot forget or overrule it ([hooks-vs-prompts, Core Distinction](https://agentpatterns.ai/instructions/hooks-vs-prompts/)).
 
+## Contents
+- [Placement detectors (HP-1…HP-4)](#placement-detectors--should-this-rule-be-prose)
+- [Hook-soundness detectors (HP-5…HP-7)](#hook-soundness-detectors--is-the-placed-hook-right)
+- [Durability detectors (HP-8…HP-9)](#durability-detectors--does-a-correctly-prose-rule-survive-the-session)
+- [Escalation ladder](#escalation-ladder-for-recommendations)
+
 ---
 
 ## Placement detectors — should this rule be prose?

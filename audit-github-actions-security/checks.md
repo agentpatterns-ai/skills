@@ -11,6 +11,19 @@ rule: a workflow runs privileged automation on every event, sometimes on attacke
 so untrusted input must never reach a privileged runtime, and every trust + permission must be an
 immutable, least-privilege, deterministic control.
 
+## Contents
+- [GHA-1 — Script injection via untrusted `${{ … }}` expansion](#gha-1--untrusted----expanded-into-a-run-shell-script-injection--cicd-sec-4)
+- [GHA-2 — Pwn-request: privileged trigger builds untrusted code](#gha-2--privileged-trigger-checks-out--builds-untrusted-code-pwn-request--cicd-sec-4)
+- [GHA-3 — Third-party action pinned to a mutable ref](#gha-3--third-party-action-pinned-to-a-mutable-ref-not-a-full-sha-dependency-chain-abuse--cicd-sec-39)
+- [GHA-4 — `GITHUB_TOKEN` over-privileged / no `permissions:` block](#gha-4--github_token-over-privileged--no-permissions-block-iam--cicd-sec-25)
+- [GHA-5 — Long-lived secrets instead of OIDC](#gha-5--long-lived-secrets--secret-leakage-instead-of-oidc-credential-hygiene--cicd-sec-6)
+- [GHA-6 — Fork-PR / deploy runs without an approval gate](#gha-6--fork-pr--deploy-runs-without-an-approval-or-flow-control-gate-cicd-sec-1)
+- [GHA-7 — Self-hosted runner reachable by untrusted code](#gha-7--self-hosted-runner-reachable-by-untrusted-code-insecure-config--cicd-sec-7)
+- [GHA-8 — Ungoverned 3rd-party services / remote-script execution](#gha-8--ungoverned-3rd-party-services--remote-script-execution-cicd-sec-8)
+- [GHA-9 — Artifacts built/published without integrity or provenance](#gha-9--artifacts-builtpublished-without-integrity-or-provenance-cicd-sec-9)
+- [GHA-10 — Security-masking config / insufficient logging](#gha-10--security-masking-config--insufficient-logging--visibility-cicd-sec-10)
+- [GHA-0 — Precision / anti-theatre guard](#gha-0--precision--anti-theatre-guard-do-not-flag-a-hardened-workflow)
+
 ---
 
 ## GHA-1 — Untrusted `${{ … }}` expanded into a `run:` shell (script injection · CICD-SEC-4)

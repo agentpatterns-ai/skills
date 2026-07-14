@@ -10,6 +10,19 @@ session too short/sparse to amortize the 2× write premium).
 > Remediation lessons (framing only, never a sole cite): *caching-static-first*,
 > *assembling-the-prompt*, *the-production-stack* — live URLs per check below.
 
+## Contents
+- [PC-1 — Volatile content in the static prefix](#pc-1--volatile-content-in-the-static-prefix)
+- [PC-2 — Non-deterministic tool enumeration](#pc-2--non-deterministic-tool-enumeration)
+- [PC-3 — Tool definitions mutated / rebuilt mid-session](#pc-3--tool-definitions-mutated--rebuilt-mid-session)
+- [PC-4 — Cache-hostile assembly order](#pc-4--cache-hostile-assembly-order-dynamic-content-early)
+- [PC-5 — Per-call mutation/personalization of the system prompt](#pc-5--per-call-mutationpersonalization-of-the-system-prompt)
+- [PC-6 — Mid-session model / effort / MCP switch](#pc-6--mid-session-model--effort--mcp-switch)
+- [PC-7 — No cache-health monitoring](#pc-7--no-cache-health-monitoring-silent-miss)
+- [PC-8 — Per-machine context across a fleet](#pc-8--per-machine-context-in-the-system-prompt-across-a-fleet)
+- [PC-9 — Cache-economics misfit (false-positive guard)](#pc-9--cache-economics-misfit-false-positive-guard--do-not-flag-missing-discipline-here)
+- [PC-10 — Cache-TTL misfit for the session's idle shape](#pc-10--cache-ttl-misfit-for-the-sessions-idle-shape)
+- [PC-11 — Cache-busting compaction](#pc-11--cache-busting-compaction-when-recommending-history-compression)
+
 ---
 
 ### PC-1 — Volatile content in the static prefix
@@ -121,7 +134,9 @@ session too short/sparse to amortize the 2× write premium).
   on turn 1, `cache_read_input_tokens` after) ([caching discipline → Extended cache TTL for long
   sessions](https://agentpatterns.ai/context-engineering/prompt-caching-architectural-discipline/)).
 - **Fix:** match TTL to idle shape — continuous → 5-min; mixed/5–60-min idle → 1-hour
-  (`ENABLE_PROMPT_CACHING_1H=1`, Claude Code ≥ v2.1.108, or per-breakpoint `ttl: "1h"`, 1-hour blocks
+  (`ENABLE_PROMPT_CACHING_1H=1`, Claude Code ≥ v2.1.108 — the version that introduced this behavior as
+  of this doc's writing; check the currently-installed Claude Code version rather than trusting the
+  pinned number to stay accurate — or per-breakpoint `ttl: "1h"`, 1-hour blocks
   before 5-minute blocks); walk-away → neither. Remediation:
   [learn — caching-static-first](https://learn.agentpatterns.ai/context-engineering/caching-static-first/).
 

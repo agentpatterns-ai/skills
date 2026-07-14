@@ -11,6 +11,13 @@ is read-only. Remediation links point to the matching `learn` lesson for step-or
 > On a solo, single-stage, low-stakes task, a heavy schema + plan-approval gate is **ceremony, not a
 > violation** — record it as a non-finding and do not demand more structure.
 
+## Contents
+- [Handoffs (MA-H1…MA-H2)](#handoffs-ma-h)
+- [State & topology (MA-S1…MA-S3)](#state--topology-ma-s)
+- [Gates & verification (MA-V1…MA-V3)](#gates--verification-ma-v)
+- [Loops (MA-L1)](#loops-ma-l)
+- [Cost & scaling (MA-C1)](#cost--scaling-ma-c)
+
 ---
 
 ## Handoffs (MA-H*)

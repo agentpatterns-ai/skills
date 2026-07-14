@@ -2,7 +2,7 @@
 name: conflicting-instruction-detector
 description: Surface semantic conflicts across two or more agent instruction files / a skill library — pairs of independently-authored rules in different files that contradict in effect though they share no wording — and present them as candidate conflicts for human review, never auto-resolved. Invoke only when the concern is cross-file — rules in different files disagree, a multi-file instruction set or skill library needs checking for cross-document contradictions, or an agent behaves inconsistently because rules in separate files conflict. Skip when the target is a single file's own attention/density or within-file contradictions and precedence (use audit-instruction-file), or when you want a conflict mechanically fixed.
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /conflicting-instruction-detector [path-or-dir]
 ---
 
@@ -15,12 +15,14 @@ whole set and surfaces those **candidate** conflicts for a human to adjudicate. 
 and layer-stack contradiction + precedence.
 
 **Stance — detect and surface for human review; read-only; never resolve, never auto-fix.** By
-design, not a limitation. Semantic cross-document detection is *unreliable*: even strong models drop
-to 74.6% F1 on cross-type conflicts — bottoming at 60.3% on the worst pair ([ConInstruct, arXiv:2511.14342](https://arxiv.org/abs/2511.14342)),
-so many flags are false positives — every flag is a **review candidate, never a confirmed conflict**,
-and there is **no `--fix` / auto-resolve path**. Measured: GPT-4o directly generates a response in
-97.5% of cases on instructions carrying 1–2 conflicts, silently resolving rather than flagging
-(ConInstruct) — so this skill forces the surface and hands the choice to a human.
+design, not a limitation. Semantic cross-document detection is *unreliable* enough that this skill
+stays read-only: even strong models were measured at 74.6% F1 on cross-type conflicts — bottoming at
+60.3% on the worst pair ([ConInstruct, arXiv:2511.14342](https://arxiv.org/abs/2511.14342)) — model
+capability on this task will drift; it's the qualitative gap, not the exact figure, that justifies the
+design. So many flags are false positives — every flag is a **review candidate, never a confirmed
+conflict**, and there is **no `--fix` / auto-resolve path**. Measured (same paper, point-in-time):
+GPT-4o directly generated a response in 97.5% of cases on instructions carrying 1–2 conflicts, silently
+resolving rather than flagging — so this skill forces the surface and hands the choice to a human.
 
 ## Input
 - `path-or-dir` (optional): instruction set / skill library to scan — a dir of `SKILL.md`s,
@@ -70,7 +72,8 @@ a question, not a fix.
 ```
 # Candidate instruction conflicts — <target>   (review queue, not findings)
 
-⚠ Detection of semantic conflicts is unreliable (74.6% F1 cross-type, worst pair 60.3% — ConInstruct).
+⚠ Detection of semantic conflicts is unreliable — measured at 74.6% F1 cross-type, worst pair 60.3%
+(ConInstruct; the qualitative gap is durable, the exact figures will drift as models improve).
 Each row is a CANDIDATE to confirm — not a confirmed conflict. Nothing here is auto-resolved.
 
 | Rank | Class | Rule A (file:line) | Rule B (file:line) | Apparent contradiction | Question for you |
@@ -102,6 +105,7 @@ e.g. different scopes/conditions — so the reader sees the false-positive surfa
   own un-pulled branch) are the top false-positive source; this gate removes them.
 - **Flag, never resolve.** No `--fix`, no auto-resolve, no precedence-winner picked by the skill — the
   human adjudicates. The headline contract, not a footnote.
-- **Every row is a candidate, not a finding.** 74.6% F1 cross-type (60.3% floor) means expect false
-  positives; present the likely-not-conflict pairs too so the skill is not over-trusted.
+- **Every row is a candidate, not a finding.** Measured at 74.6% F1 cross-type (60.3% floor,
+  ConInstruct — the figures will drift, the false-positive rate they document won't go to zero);
+  present the likely-not-conflict pairs too so the skill is not over-trusted.
 - **Read-only.** It reports a review queue and asks questions; it edits nothing.

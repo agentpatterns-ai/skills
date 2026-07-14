@@ -10,6 +10,16 @@ The unifying rule: a self-improvement loop compounds across sessions, so a singl
 ratchets. Every write must be gated on **objective evidence**, additive, bounded to a small always-loaded
 section, and — when unattended — routed to the backlog rather than applied.
 
+## Contents
+- [SIP-1 — Protocol present and in always-loaded context](#sip-1--self-improvement-protocol-present-and-in-always-loaded-context-single-finding-when-missing-high-if-a-loop-already-runs-else-medium--no-sip-27-fan-out)
+- [SIP-2 — Delta-update rule present](#sip-2--delta-update-rule-present-no-wholesale-rewrite-medium)
+- [SIP-3 — Write-gate / approval boundary defined](#sip-3--write-gate--approval-boundary-defined-on-objective-evidence-high)
+- [SIP-4 — Protected source-of-truth core declared](#sip-4--protected-source-of-truth-core-declared-medium)
+- [SIP-5 — No lossy compression](#sip-5--no-lossy-compression-rare-safety-critical-lines-protected-medium)
+- [SIP-6 — Autonomous → backlog + audit trail](#sip-6--autonomous--backlog--audit-trail-no-autonomous-executable-scaffolding-self-modification-high)
+- [SIP-7 — Growing content routed out of the always-loaded file](#sip-7--growing-content-routed-out-of-the-always-loaded-file-low)
+- [SIP-0 — Precision / anti-theatre guard](#sip-0--precision--anti-theatre-guard-do-not-flag-a-well-formed-protocol)
+
 ---
 
 ## SIP-1 — Self-improvement protocol present and in always-loaded context *(single finding when missing: High if a loop already runs, else Medium — no SIP-2…7 fan-out)*

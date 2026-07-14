@@ -2,7 +2,7 @@
 name: audit-memory-retrieval-integrity
 description: Audit a retrieval or memory layer — RAG config, vector-store queries, agent memory stores, knowledge-graph tool-use — for the retrieval-boundary authorization-and-integrity gap — cross-tenant chunk bleed, agent-supplied tenant identity, untokenized PII in retrieved context, and retrieved/remembered content trusted as fact-or-instruction with no provenance tier. Invoke when reviewing a RAG / vector-store / agent-memory pipeline's own retrieval-boundary scoping (no egress/web access named), a multi-tenant retrieval path, or before wiring retrieved chunks into model context. Skip when egress/web access is also named alongside the retrieval (use audit-lethal-trifecta), credential/secret hygiene (use audit-secret-exposure), or validating an LLM's output before it reaches a sink (use audit-supply-chain-sinks).
 user-invocable: true
-version: "0.3.1"
+version: "0.3.2"
 usage: /audit-memory-retrieval-integrity [path-to-retrieval-or-memory-code]
 ---
 
