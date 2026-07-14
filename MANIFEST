@@ -14,9 +14,11 @@ audit-prompt-cache-hygiene
 audit-prompt-hook-placement
 audit-secret-exposure
 audit-self-improvement-protocol
+audit-skill-quality
 audit-supply-chain-sinks
 audit-tool-definition
 audit-verification-gates
 compress-prompt
 conflicting-instruction-detector
+write-skill
 write-tool-description

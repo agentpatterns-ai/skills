@@ -2,7 +2,7 @@
 name: audit-instruction-file
 description: Audit a single agent instruction file (AGENTS.md, CLAUDE.md, .cursorrules, copilot-instructions.md, GEMINI.md, …) against context-engineering principles and recommend the smallest fix. Invoke when reviewing, writing, or debugging one instruction/memory file, when an agent ignores documented rules within a single file, or when asked to look at that one file and diagnose why a rule "isn't sticking". Skip when the goal is to shorten/tighten the file rather than detect problems (use compress-prompt), when auditing or installing the file's standing self-improvement/learning-loop protocol section (use audit-self-improvement-protocol), when a must-never-fail rule needs moving into a hook/gate (use audit-prompt-hook-placement), when editing ordinary docs or source code, or when rules across peer files with no defined load order contradict each other (use conflicting-instruction-detector) — cross-layer precedence within one load stack (e.g. CLAUDE.md vs a loaded SKILL.md) stays here.
 user-invocable: true
-version: "0.3.0"
+version: "0.3.1"
 usage: /audit-instruction-file [path-or-dir]
 ---
 

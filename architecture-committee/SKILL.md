@@ -2,7 +2,7 @@
 name: architecture-committee
 description: Convene a debiased multi-persona committee to vet an architecture / design decision for a feature, spec, or PRD — distinct personas independently propose, steelman their pick AND its opposite, cross-examine across capped debate rounds, then converge on the approach that fits THIS spec rather than the model's default priors. Invoke when asked to "form/convene a committee", weigh architecture or technology options, or pressure-test a design choice before committing. Skip when you are auditing or detecting problems in an existing instruction file / config (use audit-instruction-file or audit-lethal-trifecta), compressing a prompt (use compress-prompt), or when the decision is trivial / already made and only execution remains.
 user-invocable: true
-version: "0.3.0"
+version: "0.3.1"
 usage: /architecture-committee [goal | spec | PRD | feature description]
 ---
 

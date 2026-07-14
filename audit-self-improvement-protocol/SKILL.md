@@ -2,7 +2,7 @@
 name: audit-self-improvement-protocol
 description: Audit whether an agent's always-loaded base instruction file (CLAUDE.md / AGENTS.md / equivalent) carries a well-formed self-improvement protocol — the standing section that gates persisted learnings behind approval, routes them to a backlog, and bars autonomous rewrite of the source-of-truth core or executable scaffolding — then install or repair the canonical protocol on confirmation. Invoke when adding, reviewing, or repairing a self-improvement / learning-loop section in a base instruction file, or wiring an agent to capture and track its own improvement ideas. Skip when auditing the whole file's attention / length / density structure (use audit-instruction-file), harness permissions / sandbox / reversibility / cost boundaries (use audit-harness-safety), placing a must-never-fail rule into a deterministic hook (use audit-prompt-hook-placement), or simply filing one backlog item (file it in your backlog tracker).
 user-invocable: true
-version: "0.3.0"
+version: "0.3.1"
 usage: /audit-self-improvement-protocol [path-to-base-instruction-file-or-repo]
 ---
 

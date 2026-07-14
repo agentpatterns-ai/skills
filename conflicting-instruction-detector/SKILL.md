@@ -2,7 +2,7 @@
 name: conflicting-instruction-detector
 description: Surface semantic conflicts across two or more agent instruction files / a skill library — pairs of independently-authored rules in different files that contradict in effect though they share no wording — and present them as candidate conflicts for human review, never auto-resolved. Invoke only when the concern is cross-file — rules in different files disagree, a multi-file instruction set or skill library needs checking for cross-document contradictions, or an agent behaves inconsistently because rules in separate files conflict. Skip when the target is a single file's own attention/density or within-file contradictions and precedence (use audit-instruction-file), or when you want a conflict mechanically fixed.
 user-invocable: true
-version: "0.3.0"
+version: "0.3.1"
 usage: /conflicting-instruction-detector [path-or-dir]
 ---
 

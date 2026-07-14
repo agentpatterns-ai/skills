@@ -2,7 +2,7 @@
 name: write-tool-description
 description: Write the agent-facing description, parameter docs, and schema constraints for ONE tool/function so the model selects and calls it correctly — positive selection signal, sibling discriminator, return shape, example values, and poka-yoke schema. Invoke when authoring or revising one tool's definition the agent chooses among, or when an agent keeps mis-selecting or mis-calling that tool. Skip when flagging description defects across a whole toolset without rewriting (use audit-tool-definition), auditing a natural-language instruction file (use audit-instruction-file), or compressing a system prompt under a token budget (use compress-prompt).
 user-invocable: true
-version: "0.3.0"
+version: "0.3.1"
 usage: /write-tool-description [tool name + signature + purpose (+ siblings, side-effects)]
 ---
 
