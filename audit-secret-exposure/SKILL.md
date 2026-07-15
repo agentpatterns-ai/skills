@@ -2,7 +2,7 @@
 name: audit-secret-exposure
 description: Scan an agent's context surfaces — instruction files, skill files, harness config, tool defs, and credential-bearing files — for credentials that landed where the model can read them — hardcoded keys, secrets pasted into prompts/tool args, agent-readable .env/key files with no mechanical block, long-lived keys on harness/context surfaces where short-lived tokens exist (workflow-file OIDC posture — use audit-github-actions-security), URL query-string leak channels, secrets baked into skill examples, and control logic stored in a system prompt. Invoke when granting or hardening an agent's repo/harness and you need a deterministic literal-secret content scan. Skip when auditing whether private-data + untrusted-input + egress co-occur on one execution path (use audit-lethal-trifecta) or auditing dependency/install sinks (use audit-supply-chain-sinks).
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /audit-secret-exposure [path-to-agent-config-or-repo]
 ---
 
@@ -39,7 +39,7 @@ where a short-lived one exists? **Out of scope:** whether private-data + untrust
 co-occur on one path (architecture — use `audit-lethal-trifecta`); dependency/install poisoning
 (supply-chain); generic CI/CD workflow secret posture — cloud-deploy OIDC, workflow hardening (use
 `audit-github-actions-security`; SE-4 keeps the agent's own model-API credential wherever it lives);
-app source-code vulnerabilities (general security review). They touch only at the
+app source-code vulnerabilities (use `review-code`). They touch only at the
 exfil edge — a leaked secret is the *payload* a trifecta exfiltrates.
 
 ## Procedure

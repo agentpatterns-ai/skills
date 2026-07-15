@@ -2,7 +2,7 @@
 name: audit-prompt-hook-placement
 description: Audit the enforcement-medium decision in an agent harness — for each stated rule, does it belong in prose (judgment) or relocated to a deterministic gate (PreToolUse hook / CI / tool-restriction)? — and flag misplaced absolute rules and unsound hooks. Invoke when hardening a harness for where a rule should live, when a recurring error has piled up more prompt prohibitions and you're deciding whether to relocate them to a gate, before trusting a CLAUDE.md prohibition for a must-never-fail constraint, or when adding/reviewing a hook. Skip when judging prose wording/attention/density, or simply diagnosing why a rule in one file isn't followed with no request to relocate it (use audit-instruction-file — it can recommend a hook and hand off here), the private-data/untrusted-input/egress exfiltration model (use audit-lethal-trifecta), or auditing whether an existing completion gate is soundly anchored to external state (use audit-verification-gates).
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /audit-prompt-hook-placement [path-to-harness-or-instruction-file]
 ---
 
@@ -44,7 +44,7 @@ stay prose → `audit-instruction-file`; loop/cost safety ceilings inside an obs
 audit → `audit-observability-setup` (OBS-4; this skill owns the general enforcement-medium decision);
 the private-data + untrusted-input + egress trifecta and
 egress-removal → `audit-lethal-trifecta` (does **not** enumerate execution paths); application
-source-code vulnerabilities → a general security review.
+source-code vulnerabilities → `review-code`.
 
 ## Procedure
 1. **Inventory every rule** across instruction files and the hook/CI config — what it requires, where

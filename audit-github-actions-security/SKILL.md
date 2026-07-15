@@ -2,7 +2,7 @@
 name: audit-github-actions-security
 description: Audit GitHub Actions workflow files (.github/workflows/*.yml, composite/reusable actions) against the OWASP Top 10 CI/CD Security Risks (CICD-SEC-1..10) — script injection via untrusted ${{ github.event }} expansion, pull_request_target/workflow_run pwn-requests, mutable action pins, over-broad GITHUB_TOKEN perms, long-lived secrets in workflow files where OIDC exists, exposed self-hosted runners, and more. Invoke when reviewing, hardening, or writing a GitHub Actions workflow or CI/CD pipeline config — including one that runs an agent — or vetting a workflow before merge. Skip when scanning for literal hardcoded credentials or the agent's model-API key posture on harness/context surfaces (use audit-secret-exposure), auditing an agent harness's output/dependency-install sinks (use audit-supply-chain-sinks), the harness's own sandbox/reversibility/kill-path even when the agent runs in CI (use audit-harness-safety), or an agent's private-data x untrusted-input x egress architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /audit-github-actions-security [path-to-workflow-or-repo]
 ---
 

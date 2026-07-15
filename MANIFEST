@@ -20,5 +20,6 @@ audit-tool-definition
 audit-verification-gates
 compress-prompt
 conflicting-instruction-detector
+review-code
 write-skill
 write-tool-description

@@ -2,7 +2,7 @@
 name: compress-prompt
 description: Compress any prompt or instruction file to maximize signal per token — convert prose to tables/bullets/rules, front-load critical constraints, and apply semantics-preserving transforms. Invoke when asked to shorten, tighten, densify, or "make this prompt/instruction file more concise". Skip when editing ordinary docs or source code, or when the goal is to detect (not fix) density problems — use audit-instruction-file for that.
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /compress-prompt [path-or-text]
 ---
 
@@ -87,7 +87,7 @@ Naive "make it shorter" breaks both — the non-obvious edges:
   appearing with 97.2% prevalence ([arXiv:2512.17920](https://arxiv.org/abs/2512.17920); the pattern is documented in [prompt-compression](https://agentpatterns.ai/context-engineering/prompt-compression/); Remediation: [learn — the-goldilocks-zone](https://learn.agentpatterns.ai/prompt-engineering/the-goldilocks-zone/)) — go all the way to a
   crisp, unambiguous rule, or leave it verbose. A half-trimmed rule hurts compliance *more* than the original.
 
-## Report template
+## Output template
 
 ```
 # Prompt compression

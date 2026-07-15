@@ -2,7 +2,7 @@
 name: audit-verification-gates
 description: Audit the completion-gating architecture of an agent harness — the hooks, ledgers, graders, checklists, and red-green constraints that decide when an agent may declare "done" — and flag every gate that trusts self-report, grades the execution path, or is gameable rather than mechanically anchored to deterministic external state. Invoke when reviewing or hardening how a harness blocks completion (Stop / SubagentStop / PostToolUse hooks, verification ledgers, pre-completion checklists, red-green/TDD constraints, eval graders) — before trusting an agent's "all tests pass" / "done". Skip when the concern is run visibility — tracing, logs, metrics, exit-code plumbing (use audit-observability-setup), where a rule should live — prose vs deterministic hook (use audit-prompt-hook-placement), a critic agent approving its own producer's output (use audit-multi-agent-orchestration), or security/exfiltration architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /audit-verification-gates [path-to-agent-config-or-repo]
 ---
 

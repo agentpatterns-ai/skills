@@ -2,7 +2,7 @@
 name: write-skill
 description: Write or substantially revise one SKILL.md — dispatch description craft (what + when + capabilities, trigger phrases), the knowledge-not-behavior boundary, degrees-of-freedom matching, positive framing, one-level-deep progressive disclosure, a Gotchas section, and eval-able output. Invoke when authoring a new agent skill or reworking an existing SKILL.md's frontmatter or body. Skip when reviewing or grading an existing skill's quality without rewriting it (use audit-skill-quality), auditing a plain instruction file that isn't a SKILL.md (use audit-instruction-file), or shrinking an existing prompt under a token budget (use compress-prompt).
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /write-skill [skill idea/purpose + target agent tool + rough scope, or an existing draft SKILL.md to revise]
 ---
 

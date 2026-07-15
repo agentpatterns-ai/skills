@@ -1,8 +1,8 @@
 ---
 name: audit-lethal-trifecta
-description: Audit an agent / sub-agent / MCP setup for the lethal trifecta — private-data access + untrusted-content exposure + external egress on one execution path — and flag the prompt-injection and exfiltration routes it opens. Invoke when reviewing or hardening an agent harness's security architecture (sub-agent tool allowlists, MCP servers, permissions, sandbox/egress config) or before deciding if granting an agent new tools, data, or web/network access is safe (e.g. a RAG/vector-store agent gaining web access). Skip when the ask is literal secrets in context (use audit-secret-exposure), LLM-output sinks or agent-run installs (use audit-supply-chain-sinks), blast-radius/reversibility containment (use audit-harness-safety), retrieval-boundary authorization with no egress leg (use audit-memory-retrieval-integrity), instruction-file content/attention (use audit-instruction-file), or reviewing application source code for vulnerabilities (use a general security review).
+description: Audit an agent / sub-agent / MCP setup for the lethal trifecta — private-data access + untrusted-content exposure + external egress on one execution path — and flag the prompt-injection and exfiltration routes it opens. Invoke when reviewing or hardening an agent harness's security architecture (sub-agent tool allowlists, MCP servers, permissions, sandbox/egress config) or before deciding if granting an agent new tools, data, or web/network access is safe (e.g. a RAG/vector-store agent gaining web access). Skip when the ask is literal secrets in context (use audit-secret-exposure), LLM-output sinks or agent-run installs (use audit-supply-chain-sinks), blast-radius/reversibility containment (use audit-harness-safety), retrieval-boundary authorization with no egress leg (use audit-memory-retrieval-integrity), instruction-file content/attention (use audit-instruction-file), or reviewing application source code for vulnerabilities (use review-code).
 user-invocable: true
-version: "0.3.2"
+version: "0.4.0"
 usage: /audit-lethal-trifecta [path-to-agent-config-or-repo]
 ---
 
@@ -75,9 +75,10 @@ back as trusted instruction later; a per-session pass misses it (LT-A4).
 | research (web)         | No           | Yes (web)       | Yes       | safe     |
 
 ## Findings
-| Severity | Path | Legs | Cheapest fix (deterministic) | Risk it migrates to |
-|---|---|---|---|---|
-| High | deploy-agent | PD+UI+EG | default-deny egress sandbox (`--network none`) | sandbox-escape — harden the boundary |
+| Severity | Check | Path | Legs | Cheapest fix (deterministic) | Risk it migrates to | Fix → lesson |
+|---|---|---|---|---|---|---|
+| High | LT-EG | deploy-agent | PD+UI+EG | default-deny egress sandbox (`--network none`) | sandbox-escape — harden the boundary | checks.md → LT-EG |
+| High | LT-A1 | build-agent | PD+UI+EG | pin/allowlist deps; sandbox the install | install-time egress | checks.md → LT-A1 |
 
 **Safe paths:** <which, and which leg keeps them safe.>
 **Smallest high-impact change:** <the one leg to remove first.>
