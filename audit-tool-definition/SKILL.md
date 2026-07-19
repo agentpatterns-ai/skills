@@ -1,8 +1,8 @@
 ---
 name: audit-tool-definition
-description: Audit one or many individual agent-facing tool/function definitions — name, description, inputSchema, output/error contract, and MCP annotations — for the ergonomics failures that make an agent mis-select or misuse a tool, and emit a findings report. Invoke when reviewing the quality of individual tool definitions (function-calling specs, or the per-tool defs an MCP server exposes) or diagnosing why an agent picks or calls a tool wrong. Skip when the goal is to produce the corrected description/schema for one tool (use write-tool-description), to audit an MCP server's own declaration — primitive choice, transport, server instructions, tool-count budget, annotation presence/defaults — rather than its individual tool defs (use audit-mcp-server), or to audit per-path data/egress security architecture (use audit-lethal-trifecta).
+description: Audit one or many individual agent-facing tool/function definitions — name, description, inputSchema, output/error contract, and MCP annotations — for the ergonomics failures that make an agent mis-select or misuse a tool, and emit a findings report. Invoke when reviewing the quality of individual tool definitions (function-calling specs, or the per-tool defs an MCP server exposes) or diagnosing why an agent picks or calls a tool wrong. Skip when the goal is to produce the corrected description/schema — for one tool, or a whole set rewritten one tool at a time (use write-tool-description), to audit an MCP server's own declaration — primitive choice, transport, server instructions, tool-count budget, annotation presence/defaults — rather than its individual tool defs (use audit-mcp-server), or to audit per-path data/egress security architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-tool-definition [path-to-tool-defs-or-mcp-config]
 ---
 
@@ -59,10 +59,11 @@ instructions, tool-count budget (`audit-mcp-server`); per-path data/egress/untru
 
 ## Checks
 The 12 detectors (ID / Flags / Why+citation / Fix-lesson) live in [`checks.md`](checks.md); load when
-auditing. Core ergonomics: TD-1 selection signal, TD-2 MCP self-containment, TD-3 parameter
-clarity, TD-4 schema poka-yoke, TD-6 output sizing, TD-8 actionable errors, TD-9 annotation truth,
-TD-10 idempotency. Tail (load on demand): TD-5 altitude, TD-7 graceful truncation, TD-11
-overlap/sprawl (advisory), TD-12 ToolLeak (security hand-off, corpus-gap — not a core normative claim).
+auditing — one bundled file, all 12 arrive together, and step 2 verdicts all 12. Core ergonomics:
+TD-1 selection signal, TD-2 MCP self-containment, TD-3 parameter clarity, TD-4 schema poka-yoke,
+TD-6 output sizing, TD-8 actionable errors, TD-9 annotation truth, TD-10 idempotency. Tail
+(lower-priority, still verdicted): TD-5 altitude, TD-7 graceful truncation, TD-11 overlap/sprawl
+(advisory), TD-12 ToolLeak — always run (security flag-and-route per the Critical rules).
 
 ## Output template
 ```
@@ -78,7 +79,7 @@ overlap/sprawl (advisory), TD-12 ToolLeak (security hand-off, corpus-gap — not
 | Severity | Tool | Check | What's wrong | Fix (remediation) |
 |---|---|---|---|---|
 | High   | get_sprint_issues | TD-9 | readOnlyHint:true but impl writes a last_seen timestamp | drop readOnlyHint or stop the write — see annotations-and-concurrency |
-| High   | get_sprint_issues | TD-4 | bare `sprint_id` string, no enum on `status`, no sample call | enum the status; add a sample call — schema-and-description-altitude |
+| High   | get_sprint_issues | TD-4 | free-text `status` where an enum belongs — mistyped values fail silently (empty result, no error) | enum the status; qualify `sprint_id`'s format — schema-and-description-altitude |
 | Medium | get_sprint_issues | TD-1 | "Get issues for a sprint." — no "use when / prefer over" signal | add a positive selection signal — schema-and-description-altitude |
 | Medium | get_sprint_issues | TD-6 | returns the 40-field raw API object with UUIDs; no limit/response_format | size to the next decision; semantic ids — token-efficient-tool-design |
 | Medium | get_sprint_issues | TD-8 | errors are "400 Bad Request" with no "what to try next" | RFC 9457 fields + actionable hint — errors-as-teaching-signal |

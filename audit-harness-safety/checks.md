@@ -34,7 +34,8 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
   Sonnet-4.6 weights span 1.1%→27.7% across harnesses; stripping the scope block moves the rate
   11.9–17.2 pts. A prompt is not a boundary ([permission-framework-over-model](https://agentpatterns.ai/security/permission-framework-over-model/) / [Qu et al. 2026, arXiv:2605.18583](https://arxiv.org/abs/2605.18583)).
 - **Fix:** encode scope as a deterministic narrow `permissions.allow` allowlist (or an ask-to-continue
-  checkpoint — **not** for headless paths, which can't pause). Remediation:
+  checkpoint — **not** for headless paths, which can't pause; headless per the evidence bar, tail
+  note). Remediation:
   [permissions-and-safety-boundaries](https://learn.agentpatterns.ai/harness-engineering/permissions-and-safety-boundaries/), [the-framework-is-the-knob](https://learn.agentpatterns.ai/security/the-framework-is-the-knob/).
 
 ### HS-3 — No hard deny under destructive / secret surfaces
@@ -93,16 +94,9 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
 - **Fix:** move the action onto a reversible primitive (branch / draft PR / staging) or add a
   human-approval gate showing the verbatim effect. Remediation:
   [reversibility-and-idempotency](https://learn.agentpatterns.ai/harness-engineering/reversibility-and-idempotency/), [snapshot-and-roll-back](https://learn.agentpatterns.ai/workflows/snapshot-and-roll-back/).
-- **Don't take a claimed "headless" / "unattended" self-description at face value — and don't treat
-  a tool-permission setting as proof of it either.** A prose line saying the agent runs unattended is
-  not evidence of headlessness. Neither is `permissions.defaultMode: bypassPermissions` / `acceptEdits`
-  or any other tool-approval-skipping setting — those control whether Claude Code's own tool-call
-  prompts appear, not whether a human/stdin is present at all; a `bypassPermissions` run can still be
-  sitting in front of an attended terminal. The ONLY evidence that genuinely establishes headlessness
-  is an actual automation trigger: a CI job/cron/webhook invocation, a scheduler, systemd/supervisor
-  management, or a non-interactive CLI flag (`--headless`, `-p`/print-mode with no TTY). Absent one of
-  those, an ask-to-continue / human-approval gate can still apply — recommend it as a valid option
-  alongside any external gate, rather than asserting inline approval categorically "can't" work.
+- **Headless carve-out:** before ruling out an inline ask-to-continue / human-approval gate, apply
+  the **headless-evidence bar** (tail note below) — prose self-description and permission settings
+  are not evidence of headlessness.
 
 ### HS-6 — Non-idempotent state mutation in a re-runnable path
 - **Flags:** a workflow that creates a branch / comment / PR / external resource with no
@@ -143,7 +137,7 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
   does **not** fire HS-9.
 - **Why:** LLM call cost is variable and attacker-influenceable; no single bound covers the cost
   dimension — real incidents reached $46K/day and $82K/48h with no per-app detection firing
-  ([unbounded-consumption-resource-bounds](https://agentpatterns.ai/security/unbounded-consumption-resource-bounds/) / [OWASP LLM10:2025](https://github.com/microsoft/hve-core/blob/main/.github/skills/security/owasp-llm/references/10-unbounded-consumption.md)).
+  ([unbounded-consumption-resource-bounds](https://agentpatterns.ai/security/unbounded-consumption-resource-bounds/) / [OWASP LLM10:2025](https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/)).
   Treat the bill as an attack surface, not an accident: an adversary *deliberately* runs up cost via
   an injection-reachable retry loop or amplification (one study showed 658× cost by coercing verbose
   multi-turn chains past a 4K per-call cap), and denial-of-wallet leaves availability metrics healthy
@@ -171,3 +165,16 @@ Group A = containment (cap the radius), B = recovery (undo the damage), C = dura
 > credential, or a denylist-only sandbox is *reduced*, not *removed* — mark it partial, don't zero it.
 > OS boundaries still leak (CVE escapes, denylist-reasoning bypass) — defense-in-depth: assume every
 > layer fails and the sandbox is the outermost one that holds ([defense-in-depth-agent-safety](https://agentpatterns.ai/security/defense-in-depth-agent-safety/)).
+
+> **Headless-evidence bar** — governs *every* branch on "headless": HS-2's Fix, HS-5's gate choice,
+> HS-6's re-runnable flag, and Procedure step 4. Don't take a claimed "headless" / "unattended"
+> self-description at face value — and don't treat a tool-permission setting as proof of it either.
+> A prose line saying the agent runs unattended is not evidence of headlessness. Neither is
+> `permissions.defaultMode: bypassPermissions` / `acceptEdits` or any other tool-approval-skipping
+> setting — those control whether Claude Code's own tool-call prompts appear, not whether a
+> human/stdin is present at all; a `bypassPermissions` run can still be sitting in front of an
+> attended terminal. The ONLY evidence that genuinely establishes headlessness is an actual
+> automation trigger: a CI job/cron/webhook invocation, a scheduler, systemd/supervisor management,
+> or a non-interactive CLI flag (`--headless`, `-p`/print-mode with no TTY). Absent one of those, an
+> ask-to-continue / human-approval gate can still apply — recommend it as a valid option alongside
+> any external gate, rather than asserting inline approval categorically "can't" work.

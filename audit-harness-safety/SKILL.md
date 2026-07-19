@@ -1,8 +1,8 @@
 ---
 name: audit-harness-safety
-description: Audit an agent harness's setup/architecture for blast-radius containment and recovery — OS-level sandbox + least-privilege scope, hard deny floors, reversibility/idempotency, a kill path, and consumption bounds — bounding the *damage* if a control fails. Invoke when hardening a harness for destructive-action safety — before granting write/Bash tools, running an agent headless or in CI, or when it touches the native filesystem, real credentials, shared branches, prod, or paid APIs; also reviewing reversibility/kill-path/cost posture. Skip when the question is data exfiltration or whether a web/network-access grant is safe — the lethal trifecta (use audit-lethal-trifecta), whether an LLM-emitted string or an agent-run package install — even phrased as a sandbox question — can be trusted at the sink (use audit-supply-chain-sinks), workflow-YAML script-injection/token/pin risks, even one running an agent (use audit-github-actions-security), or instruction-prose attention/density (use audit-instruction-file).
+description: Audit an agent harness's setup for blast-radius containment and recovery — OS-level sandbox + least-privilege scope, hard deny floors, reversibility, a kill path, and consumption bounds — bounding the *damage* if a control fails. Invoke when hardening a harness for destructive-action safety — before granting write/Bash tools, running an agent headless or in CI, or when it touches the filesystem, real credentials, shared branches, prod, or paid APIs; also reviewing whether damage/spend is bounded if a run goes wrong. Skip when the question is exfiltration / whether a web-access grant is safe (use audit-lethal-trifecta), trusting an LLM-emitted string or agent-run install at the sink — even asked as a sandbox question (use audit-supply-chain-sinks), workflow-YAML injection/token/pin risks (use audit-github-actions-security), a stated rule's enforcement medium — prose vs hook vs deny rule (use audit-prompt-hook-placement), or run visibility — traces, is the runaway auto-halted (use audit-observability-setup).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-harness-safety [path-to-agent-config-or-repo]
 ---
 
@@ -52,8 +52,10 @@ security review); live runtime monitoring (static config audit).
 3. **Score severity** from the Detectors table below — its Sev column is the canonical map.
    Done when every finding carries one severity.
 4. **Recommend the deterministic control** — sandbox / allowlist / deny rule / human gate / `maxTurns`
-   / budget — over any prompt mitigation. For a **headless/CI** path, never offer "ask-to-continue":
-   it can't pause ([permission-framework-over-model, *When This Backfires*](https://agentpatterns.ai/security/permission-framework-over-model/)).
+   / budget — over any prompt mitigation. For a **headless/CI** path — headless per the
+   evidence bar in [`checks.md`](checks.md) (an actual automation trigger, never prose
+   self-description or a permission setting) — never offer "ask-to-continue": it can't pause
+   ([permission-framework-over-model, *When This Backfires*](https://agentpatterns.ai/security/permission-framework-over-model/)).
    Done when every finding names its deterministic control.
 5. **Report** with the template below; link each fix to its remediation lesson.
    Done when the Paths table, Findings, Safe paths, and Smallest high-impact change are filled.

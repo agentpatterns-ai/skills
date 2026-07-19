@@ -1,8 +1,8 @@
 ---
 name: audit-self-improvement-protocol
-description: Audit whether an agent's always-loaded base instruction file (CLAUDE.md / AGENTS.md / equivalent) carries a well-formed self-improvement protocol — the standing section that gates persisted learnings behind approval, routes them to a backlog, and bars autonomous rewrite of the source-of-truth core or executable scaffolding — then install or repair the canonical protocol on confirmation. Invoke when adding, reviewing, or repairing a self-improvement / learning-loop section in a base instruction file, or wiring an agent to capture and track its own improvement ideas. Skip when auditing the whole file's attention / length / density structure (use audit-instruction-file), harness permissions / sandbox / reversibility / cost boundaries (use audit-harness-safety), placing a must-never-fail rule into a deterministic hook (use audit-prompt-hook-placement), or simply filing one backlog item (file it in your backlog tracker).
+description: Audit whether an agent's always-loaded base instruction file (CLAUDE.md / AGENTS.md) carries a well-formed self-improvement protocol — the standing section that gates persisted learnings behind approval, routes them to a backlog, and bars autonomous rewrite of the core or executable scaffolding — then install or repair the canonical protocol on confirmation. Invoke when adding, reviewing, or repairing a self-improvement/learning-loop section in a base instruction file, or wiring an agent to capture and track its own improvement ideas. Skip when auditing the whole file's attention/length/density (use audit-instruction-file), read-side memory/retrieval integrity — provenance tiers, trust of remembered content — even for a self-updating store (use audit-memory-retrieval-integrity), harness permissions/sandbox/reversibility/cost boundaries (use audit-harness-safety), placing a must-never-fail rule into a deterministic hook (use audit-prompt-hook-placement), or filing one backlog item (use your backlog tracker).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-self-improvement-protocol [path-to-base-instruction-file-or-repo]
 ---
 
@@ -16,10 +16,11 @@ and on confirmation **installs or repairs** the canonical protocol — mirroring
 (detect → recommend → apply on confirmation), but for one specific section and its running rules.
 
 **Stance — detect, recommend, and (only on explicit confirmation) apply additive fixes; never auto-apply.**
-- **The loop must improve through evidence, not self-assertion.** Every persisted change passes a write-gate
-  on **objective evidence / evals — never the agent's own say-so**; sycophantic self-assessment and reward
-  hacking are the named failure modes (SIP-3). A natural-language protocol rule *documents* the boundary;
-  the runtime gate / human confirm is what *stops* the write.
+- **The loop must improve through evidence, not self-assertion.** The write-gate is **two-part**: an
+  **approval boundary** (interactive = human confirm; autonomous = backlog only) AND an **evidence
+  standard** (the change is justified by evals / objective evidence — **never the agent's own say-so**);
+  sycophantic self-assessment and reward hacking are the named failure modes (SIP-3). A natural-language
+  protocol rule *documents* the boundary; the runtime gate is what *stops* the write.
 - **Autonomous mode files, it never applies.** In autonomous/scheduled runs the agent routes every
   opportunity to the **backlog** with an audit trail and modifies nothing; only interactive mode applies,
   on confirmation (SIP-6). Autonomous rewrite of executable scaffolding (code, hooks, tools) is out of bounds.
@@ -37,7 +38,10 @@ Audits **one section + its running protocol** inside the always-loaded base file
 loop's autonomous/interactive paths. **Out of scope:** the whole file's attention/length/layering/density
 (→ `audit-instruction-file`); harness permissions / sandbox / reversibility / cost — where the runtime
 actually stops an action (→ `audit-harness-safety`); converting a must-never-fail rule into a deterministic
-hook (→ `audit-prompt-hook-placement`); the act of filing one issue (→ your backlog tracker / issue
+hook (→ `audit-prompt-hook-placement`); the memory/retrieval layer's own read-side integrity — provenance
+tiers, cross-tenant bleed, what retrieved content is trusted as — even for a self-updating memory store
+(→ `audit-memory-retrieval-integrity`; this skill owns the write-side protocol governing whether/how
+learnings persist at all); the act of filing one issue (→ your backlog tracker / issue
 tracker, the mechanism this skill hands off to). It flags the *protocol text* for propose-don't-apply; it does not audit the runtime
 sandbox that backs it.
 
@@ -46,10 +50,11 @@ sandbox that backs it.
    record its absence — SIP-1).
    Done when the section text is extracted or a MISSING record exists.
 2. **Run the detectors** in [`checks.md`](checks.md) (SIP-1…SIP-7) plus the SIP-0 precision guard, one pass.
-   Done when every check SIP-0…SIP-7 has a recorded verdict — or, section MISSING, the single SIP-1 record of step 3 exists instead (no fan-out).
+   Done when every check SIP-0…SIP-7 has a recorded verdict — or, section MISSING, a single SIP-1 MISSING verdict is recorded and SIP-2…SIP-7 are marked not-applicable (no fan-out); step 3 then grades only that record's severity.
 3. **Classify severity** (the audit-family scheme). **High** = a missing/ungated write boundary that lets
-   the loop self-modify unilaterally (SIP-3, SIP-6). **Medium** = no delta-rule / no protected core / lossy
-   compression (SIP-2, SIP-4, SIP-5). **Low** = growing content not yet routed out (SIP-7).
+   the loop self-modify unilaterally (SIP-3's High case, SIP-6). **Medium** = no delta-rule / no protected
+   core / lossy compression, or an approval boundary with no evidence standard (SIP-2, SIP-3's Medium
+   sub-case, SIP-4, SIP-5). **Low** = growing content not yet routed out (SIP-7).
    **If no section exists anywhere (MISSING):** report a **single SIP-1 finding** — High when a learning
    loop demonstrably runs anyway (memory directives, scheduled routines, self-edit instructions elsewhere
    in the file), else Medium — offer `template.md`, and do **not** fan out SIP-2…SIP-7 (they grade a
@@ -72,7 +77,7 @@ sandbox that backs it.
 ## Checks
 Seven detectors + the SIP-0 precision guard, each with Flags / Why→corpus / Fix→lesson (two-link), in
 [`checks.md`](checks.md), loaded when auditing: SIP-1 protocol present & always-loaded · SIP-2 delta-update
-(no wholesale rewrite) · SIP-3 write-gate on objective evidence · SIP-4 protected source-of-truth core ·
+(no wholesale rewrite) · SIP-3 two-part write-gate (approval boundary + evidence standard) · SIP-4 protected source-of-truth core ·
 SIP-5 no lossy compression / safety-line protection · SIP-6 autonomous→backlog + no executable self-mod ·
 SIP-7 growing content routed out. The canonical section the fix installs is in [`template.md`](template.md).
 
@@ -107,6 +112,8 @@ Base file: <path> (always-loaded) · Section: <present | present-not-loaded | un
 - **`audit-instruction-file`** — audits the whole base file's structure (CE-1…CE-10); this skill owns the
   one self-improvement section + its protocol.
 - **`audit-harness-safety`** — permissions/sandbox/reversibility/cost; route sandbox/blast-radius there.
+- **`audit-memory-retrieval-integrity`** — the read side of a memory store (provenance tiers, tenant
+  boundaries, how retrieved content is trusted); this skill owns the write-side persistence protocol.
 - **Your backlog tracker (issue tracker)** — the filing destination; interactive OFFERS to file, autonomous FILES (never applies).
 
 ## Critical rules (read last)

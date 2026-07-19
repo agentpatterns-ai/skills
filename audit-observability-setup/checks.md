@@ -118,10 +118,13 @@ the "why") / **Fix** (cited lesson = the "how"). All detection is read-only. Bef
 ---
 
 ## Severity
-- **High:** missing runtime safety control (OBS-2, OBS-3, OBS-4) or telemetry blackout (OBS-1), or a
-  trail that lies — premature `passes:true` (OBS-9).
-- **Med:** a wired-but-incomplete pillar — gate runs but verdict not trace-coupled (OBS-8);
-  attribution present but lying denominator (OBS-7 sub-check); identity on span but not header (OBS-5/6).
+Buckets are by check ID and cover **absent as well as partial** states — never improvise a severity.
+- **High:** missing runtime safety control (OBS-2, OBS-3, OBS-4), telemetry blackout (OBS-1), a
+  trail that lies — premature `passes:true` (OBS-9), or no agent-legible signal — the blind-agent
+  trap (OBS-10).
+- **Med:** an absent or wired-but-incomplete pillar — no gate at all, or gate runs but verdict not
+  trace-coupled (OBS-8); attribution absent, or present with a lying denominator (OBS-7 — main flag
+  and sub-check alike); identity missing, or on span but not header (OBS-5/6).
 - **Low:** legibility tightening with no live blind spot.
 
 ## Run-shape suppression (do not false-positive)

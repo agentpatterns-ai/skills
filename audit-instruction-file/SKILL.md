@@ -1,8 +1,8 @@
 ---
 name: audit-instruction-file
-description: Audit a single agent instruction file (AGENTS.md, CLAUDE.md, .cursorrules, copilot-instructions.md, GEMINI.md, …) against context-engineering principles and recommend the smallest fix. Invoke when reviewing, writing, or debugging one instruction/memory file, when an agent ignores documented rules within a single file, or when asked to look at that one file and diagnose why a rule "isn't sticking". Skip when the goal is to shorten/tighten the file rather than detect problems (use compress-prompt), when auditing or installing the file's standing self-improvement/learning-loop protocol section (use audit-self-improvement-protocol), when a must-never-fail rule needs moving into a hook/gate (use audit-prompt-hook-placement), when editing ordinary docs or source code, or when rules across peer files with no defined load order contradict each other (use conflicting-instruction-detector) — cross-layer precedence within one load stack (e.g. CLAUDE.md vs a loaded SKILL.md) stays here.
+description: Audit agent instruction files (AGENTS.md, CLAUDE.md, .cursorrules, copilot-instructions.md, GEMINI.md, …) — one file, or every always-loaded instruction file in a repo plus its @-import assembly — against context-engineering principles and recommend the smallest fix. Invoke when reviewing, writing, or debugging instruction/memory files, when an agent ignores documented rules in one file, or to diagnose why a rule "isn't sticking". Skip when the file is a SKILL.md (use audit-skill-quality), when the goal is to shorten/tighten rather than detect problems (use compress-prompt), when the target is its self-improvement/learning-loop section (use audit-self-improvement-protocol), when a must-never-fail rule needs moving into a hook/gate (use audit-prompt-hook-placement), when editing ordinary docs or code, or when rules across peer files with no defined load order contradict each other (use conflicting-instruction-detector) — cross-layer precedence within one load stack (CLAUDE.md vs a loaded SKILL.md) stays here.
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-instruction-file [path-or-dir]
 ---
 
@@ -84,17 +84,20 @@ To add or change a check, edit `checks.md` (see *Expanding this skill* there); t
 set uniformly at release, not per change.
 
 ## Output template
-
+The `checks.md → <ID>` notation below is a **placeholder showing where the citation goes** — a real
+run resolves it to the actual `https://learn.agentpatterns.ai/…` URL from `checks.md`; never print
+the placeholder text itself as the citation. **Every row carries its link**, including one whose
+Recommendation is "no fix" — the column cites the check's lesson, not the fix.
 ```
 # Instruction-file audit
 
 ## <relative/path/to/file>  —  <lines> lines, ~<tokens> tokens, <N> sections
 
-| Severity | Check | Evidence (lines) | Recommendation |
-|----------|-------|------------------|----------------|
-| High     | CE-2  | L52–61           | Restate "no force-push to <branch>" at an edge |
-| Medium   | CE-1  | tail (L130+)     | Add a "Critical rules (read last)" block |
-| Low      | CE-4  | L40–48           | Replace command list with a pointer |
+| Severity | Check | Evidence (lines) | Recommendation | Fix → lesson |
+|----------|-------|------------------|----------------|--------------|
+| High     | CE-2  | L52–61           | Restate "no force-push to <branch>" at an edge | checks.md → CE-2 |
+| Medium   | CE-1  | tail (L130+)     | Add a "Critical rules (read last)" block | checks.md → CE-1 |
+| Low      | CE-4  | L40–48           | Replace command list with a pointer | checks.md → CE-4 |
 
 **What this file does well:** <1–2 specific positives — e.g. primacy used for the costliest rule.>
 

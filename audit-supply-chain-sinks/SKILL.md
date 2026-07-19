@@ -1,8 +1,8 @@
 ---
 name: audit-supply-chain-sinks
-description: Audit an agent harness's output boundary and dependency-install authority — every place an LLM-emitted string crosses into a code-interpreting sink (shell/exec/eval, SQL, HTML/markdown render, file path, package manager, a downstream LLM) and every place the agent can install an agent-named dependency — and flag the unvalidated sinks (OWASP LLM05) and slopsquatting install routes. Invoke when reviewing or hardening an agent that can execute generated code, run shell, build SQL, render model output, write files, or run package installs — including auto-running package installs inside a sandbox — or before granting an agent code-execution or install authority. Skip when auditing input-side data-flow architecture — whether one path co-holds private-data + untrusted-input + egress (use audit-lethal-trifecta), credential/secret hygiene in context (use audit-secret-exposure), or bounding what an already-granted action can destroy — sandbox, reversibility, kill path (use audit-harness-safety).
+description: Audit an agent harness's output boundary and dependency-install authority — every place an LLM-emitted string crosses into a code-interpreting sink (shell/exec/eval, SQL, HTML/markdown render, file path, package manager, a downstream LLM) and every place the agent can install an agent-named dependency — and flag the unvalidated sinks (OWASP LLM05) and slopsquatting install routes. Invoke when reviewing or hardening an agent that can execute generated code, run shell, build SQL, render model output, write files, or run package installs — including auto-running package installs inside a sandbox — or before granting an agent code-execution or install authority. Skip when auditing whether one path co-holds private-data + untrusted-input + egress (use audit-lethal-trifecta), credential hygiene in context (use audit-secret-exposure), bounding what an already-granted action can destroy — sandbox, reversibility, kill path (use audit-harness-safety), or ordinary application source-code review (use review-code).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-supply-chain-sinks [path-to-agent-config-or-repo]
 ---
 
@@ -24,9 +24,12 @@ agent-named dependency is **slopsquatting**
   not a prompt asking it to emit safe strings ([LLM05](https://agentpatterns.ai/security/improper-output-handling-downstream-sinks/)).
 - **Escape at the sink, never strip the stream.** Context-aware encoding at the consumer beats
   pattern-stripping the LLM output, which rejects legitimate code/links ([LLM05, *When This Backfires*](https://agentpatterns.ai/security/improper-output-handling-downstream-sinks/)).
-- **Gate install authority, fail closed.** Lockfile-enforced resolution (`npm ci`, `uv pip sync`,
-  `pip-compile --generate-hashes`) refuses any name the lockfile doesn't endorse — not edit-distance
-  typosquat detection, which misses 48.6% of hallucinated names ([slopsquatting](https://agentpatterns.ai/security/slopsquatting-hallucinated-package-names/)).
+- **Gate install authority, fail closed.** Lockfile-enforced install (`npm ci`, `uv pip sync`,
+  `pip-sync`) refuses any name a reviewed lockfile doesn't endorse. Lock **generation** (`uv lock`,
+  `pip-compile --generate-hashes`) gates nothing by itself — the agent proposes; a human or CI gate
+  accepts the lockfile change before install. Not edit-distance typosquat detection, which misses at
+  least 48.6% of hallucinated names (the fraction at Levenshtein distance ≥6; only 13.4% look like
+  typosquats at all) ([slopsquatting](https://agentpatterns.ai/security/slopsquatting-hallucinated-package-names/)).
 
 ## Input
 - `path` (optional): an agent-config dir or repo. Default: scan the harness for sinks — tool-executor
@@ -72,8 +75,11 @@ false-safe) plus the anti-theatre guard (SS-9) live in [`checks.md`](checks.md) 
 `cursor.execute(f"SELECT * FROM docs WHERE {llm_output}")` → a prompt rephrased to
 `1=1; DROP TABLE docs --` executes. **Finding:** High, SQL sink ungated.
 **After (the recommended fix):** the LLM emits a schema-constrained `Filter` object (Pydantic
-`Literal` fields); a deterministic executor builds `execute("… WHERE %s %s %s", (f.field, f.op,
-f.value))`. The model never writes SQL ([LLM05 example](https://agentpatterns.ai/security/improper-output-handling-downstream-sinks/)).
+`Literal` fields for `field`/`op`); a deterministic executor interpolates the enum-bounded
+field/op and binds only the free-text value —
+`execute(f"… WHERE {f.field} {f.op} %s", (f.value,))`. Placeholders bind **values**, never
+identifiers or operators; the `Literal` bound is what makes those two safe to interpolate. The
+model never writes SQL ([LLM05 example](https://agentpatterns.ai/security/improper-output-handling-downstream-sinks/)).
 
 ## Output template
 ```
@@ -104,6 +110,7 @@ least-privilege hardening where no live sink is exposed.
 ## Critical rules (read last)
 - An ungated code-interpreting sink needs a **deterministic per-sink control** — a prompt asking the
   model to emit safe strings is not a fix.
-- **Escape at the sink; gate install authority with a lockfile (fail closed)** — not stream-stripping,
-  not edit-distance typosquat detection (misses 48.6%).
+- **Escape at the sink; gate install authority with a reviewed lockfile (fail closed; lock
+  regeneration human/CI-gated)** — not stream-stripping, not edit-distance typosquat detection
+  (misses at least 48.6% — the fraction at Levenshtein distance ≥6).
 - Read-only: recommend, apply nothing without confirmation. A trifecta-safe path can still fail LLM05.

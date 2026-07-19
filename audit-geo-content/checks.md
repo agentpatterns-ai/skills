@@ -61,8 +61,9 @@ existence) — prefer them over judgement.
   retrieval floor). *Scope guard (short side only):* do **not** flag legitimately-short structural
   sections — prerequisites, code-only steps, changelog stubs, link hubs — the <200 test applies only
   to sections that carry a conceptual claim (the same "substantive H2" qualifier as GEO-D2).
-- **Why:** 256–512-token chunks retrieve best; too-short = thin context the LLM can't answer from,
-  too-long = a diluted embedding ([atomic-pages-and-chunking](https://agentpatterns.ai/geo/atomic-pages-and-chunking/),
+- **Why:** 256–512-token chunks retrieve best **for factoid queries** (the NVIDIA benchmark's
+  actionable finding — page-level chunking scored highest overall); too-short = thin context the
+  LLM can't answer from, too-long = a diluted embedding ([atomic-pages-and-chunking](https://agentpatterns.ai/geo/atomic-pages-and-chunking/),
   NVIDIA 2024 chunking benchmark; [GEO paper](https://arxiv.org/abs/2311.09735)).
 - **Fix:** split or merge to land sections in 200–400 words; no page below the ~200-word floor.
   *(→ [answer-first-atomic-pages](https://learn.agentpatterns.ai/geo/answer-first-atomic-pages/))*
@@ -101,8 +102,10 @@ existence) — prefer them over judgement.
 - **Flags:** a substantive H2 with **neither** a specific statistic (number with units) **nor** a
   markdown link to its source.
 - **Why:** statistics and cited sources are the highest-impact single rewrites for citation
-  ([assertion-density](https://agentpatterns.ai/geo/assertion-density/)). *Caveat:* PAWC rewards
-  length — directional, not a license to pad (see GEO-G1).
+  ([assertion-density](https://agentpatterns.ai/geo/assertion-density/)). The **per-H2 ≥1-stat
+  quantum is this skill's operationalization** of that density principle (via the auditor
+  assertion-density rule) — the corpus page teaches specificity, not a per-section quota. *Caveat:*
+  PAWC rewards length — directional, not a license to pad (see GEO-G1).
 - **Fix:** add ≥1 sourced statistic with units; if none is sourceable, weaken the claim — don't
   invent one. *(→ [assertion-density](https://learn.agentpatterns.ai/geo/assertion-density/))*
 
@@ -132,32 +135,42 @@ existence) — prefer them over judgement.
 - **Flags (where JSON-LD is emitted):** FAQPage answers outside **40–80 words**; body text drifted
   from the markup (contradictory signals); wrong type for shape (e.g. HowTo on prose, FAQPage on
   unrelated Q&A).
-- **Why:** schema is the one machine-readable file with *measured* citation lift (FAQPage
-  **2.7×–3.2×**), but it accrues at **indexing** time, not live fetch — and stale/mismatched markup
-  gets a page *deprioritised* ([schema-and-structured-data](https://agentpatterns.ai/geo/schema-and-structured-data/);
+- **Why:** schema is the one machine-readable file with *reported* citation lift (studies report
+  FAQPage **2.7×–3.2×** — vendor/community studies, indicative not measurement-grade), and it
+  accrues at **indexing** time, not live fetch — stale/mismatched markup *may get* a page
+  *deprioritised* ([schema-and-structured-data](https://agentpatterns.ai/geo/schema-and-structured-data/);
   [Frase.io](https://www.frase.io/blog/faq-schema-ai-search-geo-aeo)).
 - **Fix:** keep body in sync with markup; match type to content shape; FAQ answers 40–80 words,
   standalone. *(→ [machine-readable-corpora](https://learn.agentpatterns.ai/geo/machine-readable-corpora/))*
 
 ### GEO-M3 — Crawler policy blocks retrieval bots (robots.txt)
-- **Flags (deterministic):** `/robots.txt` issues a `Disallow: /` that reaches a Tier-1 **retrieval**
-  user-agent — `OAI-SearchBot`, `Claude-SearchBot`, `Claude-User`, `PerplexityBot`, `Perplexity-User`,
-  `ChatGPT-User` — including a blanket `User-agent: *` + `Disallow: /` with **no** retrieval-bot allow
-  override. Also flag: a non-compliant bot (`Bytespider`) "blocked" only in robots.txt with no WAF
-  rule. **Advisory sub-flag (not a violation):** training scrapers (`GPTBot`, `ClaudeBot`,
-  `Google-Extended`, `Meta-ExternalAgent`) left **allowed** — note it against the three-tier policy,
-  but allowing training crawl is a legitimate publisher choice, orthogonal to citability.
-- **Why:** a blocked retrieval bot never fetches the page, so it can never be cited — this is a
-  **live-fetch** block (not indexing-time hygiene like M1/M2), and **fatal to citability**. The
-  recommended policy is three-tier: **allow** retrieval / **disallow** training (advisory) / **WAF-block**
-  non-compliant. robots.txt is **advisory, not enforceable** — `ChatGPT-User` was exempted (Dec 2025)
-  and Perplexity rotates user-agents/ASNs to evade it (bot names and exemption status are provider
-  policy and change — verify the current list against the cited ai-crawler-policy source before
-  relying on this enumeration) — so any *hard* block needs a CDN/WAF rule, not
-  a robots.txt line ([ai-crawler-policy](https://agentpatterns.ai/geo/ai-crawler-policy/);
+- **Flags (deterministic, two severities):**
+  - **High — effective block, fatal to citability:** `/robots.txt` issues a `Disallow: /` that
+    reaches a **compliant** Tier-1 retrieval user-agent — `OAI-SearchBot`, `Claude-SearchBot`,
+    `Claude-User` — including a blanket `User-agent: *` + `Disallow: /` with **no** retrieval-bot
+    allow override.
+  - **Medium — ineffective-block advisory (intent mismatch, not fatal):** a `Disallow` reaching a
+    robots.txt-**exempt or evading** retrieval agent — `ChatGPT-User` (exempted Dec 2025; disallow
+    rules are ignored), `PerplexityBot`, `Perplexity-User` (rotate user-agents/ASNs) — the line is
+    a no-op: the page still gets fetched and can still be cited; flag the intent mismatch and point
+    to CDN/WAF enforcement. Same advisory for a non-compliant bot (`Bytespider`) "blocked" only in
+    robots.txt with no WAF rule.
+  - **Advisory sub-flag (not a violation):** training scrapers (`GPTBot`, `ClaudeBot`,
+    `Google-Extended`, `Meta-ExternalAgent`) left **allowed** — note it against the three-tier
+    policy, but allowing training crawl is a legitimate publisher choice, orthogonal to citability.
+- **Why:** a blocked **compliant** retrieval bot never fetches the page, so it can never be cited —
+  a **live-fetch** block (not indexing-time hygiene like M1/M2), **fatal to citability**. For the
+  exempt/evading agents the same line is ineffective, not fatal: robots.txt is **advisory, not
+  enforceable** — `ChatGPT-User` was exempted (Dec 2025) and Perplexity rotates user-agents/ASNs to
+  evade it (bot names and exemption status are provider policy and change — verify the current list
+  against the cited ai-crawler-policy source before relying on this enumeration) — so any *hard*
+  block needs a CDN/WAF rule, not a robots.txt line. The recommended policy is three-tier: **allow**
+  retrieval / **disallow** training (advisory) / **WAF-block**
+  non-compliant ([ai-crawler-policy](https://agentpatterns.ai/geo/ai-crawler-policy/);
   [Cloudflare, Aug 2025](https://blog.cloudflare.com/perplexity-is-using-stealth-undeclared-crawlers-to-evade-website-no-crawl-directives/)).
 - **Fix:** allow Tier-1 retrieval bots; enforce non-compliant blocks at CDN/WAF — never rely on
   robots.txt for hard enforcement. Advise (don't require) disallowing Tier-2 training scrapers —
-  the publisher's call. **Severity High** (a blocked
-  retrieval bot loses every citation for the page, at fetch time — not the Low machine-readable
-  hygiene band). *(→ [machine-readable-corpora](https://learn.agentpatterns.ai/geo/machine-readable-corpora/))*
+  the publisher's call. **Severity: High only for an effective block** (compliant retrieval bot, or
+  the blanket case — loses every citation for the page, at fetch time — not the Low machine-readable
+  hygiene band); **Medium for the ineffective-block advisory** (intent mismatch — the page is still
+  fetched and citable). *(→ [machine-readable-corpora](https://learn.agentpatterns.ai/geo/machine-readable-corpora/))*

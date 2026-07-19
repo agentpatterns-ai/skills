@@ -1,8 +1,8 @@
 ---
 name: audit-verification-gates
-description: Audit the completion-gating architecture of an agent harness — the hooks, ledgers, graders, checklists, and red-green constraints that decide when an agent may declare "done" — and flag every gate that trusts self-report, grades the execution path, or is gameable rather than mechanically anchored to deterministic external state. Invoke when reviewing or hardening how a harness blocks completion (Stop / SubagentStop / PostToolUse hooks, verification ledgers, pre-completion checklists, red-green/TDD constraints, eval graders) — before trusting an agent's "all tests pass" / "done". Skip when the concern is run visibility — tracing, logs, metrics, exit-code plumbing (use audit-observability-setup), where a rule should live — prose vs deterministic hook (use audit-prompt-hook-placement), a critic agent approving its own producer's output (use audit-multi-agent-orchestration), or security/exfiltration architecture (use audit-lethal-trifecta).
+description: Audit the completion-gating architecture of an agent harness — the hooks, ledgers, graders, checklists, and red-green constraints that decide when an agent may declare "done" — and flag every gate that trusts self-report, grades the execution path, or is gameable rather than mechanically anchored to deterministic external state. Invoke when reviewing or hardening how a harness's existing gates block completion (Stop / SubagentStop / PostToolUse hooks, verification ledgers, checklists, red-green/TDD constraints, eval graders) — is each existing gate's anchoring sound? — before trusting an agent's "all tests pass" / "done". Skip when the concern is run visibility — tracing, logs, metrics, exit-code plumbing (use audit-observability-setup), deciding where a rule should live — prose vs hook/gate, completion rules included (use audit-prompt-hook-placement), a critic agent approving its own producer's output (use audit-multi-agent-orchestration), or security/exfiltration architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-verification-gates [path-to-agent-config-or-repo]
 ---
 
@@ -42,7 +42,9 @@ Audits the **completion-gating setup / architecture** — statically. **Out of s
 architecture → `audit-lethal-trifecta`; live runtime monitoring (this is a static config audit). **Shared
 seam (golden-journey failure signals, semantic exit codes):** the *same* artifact appears in both audits
 — split by what the finding is about: concern = signal *visible/diagnosable* → observability; concern =
-signal *gating completion* → here.
+signal *gating completion* → here. **Shared seam (verifier independence):** independence as a property
+of the completion gate — can "done" be faked? → here (VG-5); critic-loop / role-topology coordination
+mechanics → `audit-multi-agent-orchestration`.
 
 ## Procedure
 1. **Map the completion path.** For each agent / sub-agent, find what produces the "done" signal and what
@@ -70,6 +72,9 @@ VG-3 vague items · VG-4 prose not ledger · VG-5 gameable / non-separated · VG
 non-grep-able signal · VG-11 below-floor ceremony (false-positive guard).
 
 ## Output template
+The `checks.md → <ID>` notation below is a **placeholder showing where the citation goes** — a real
+run resolves it to the actual `https://learn.agentpatterns.ai/…` URL from `checks.md`; never print
+the placeholder text itself as the citation.
 ```
 # Verification-gate audit — <target>
 
@@ -81,11 +86,11 @@ non-grep-able signal · VG-11 below-floor ceremony (false-positive guard).
 | red-green workflow | no "don't change tests" | n/a | Yes | FAIL (VG-9) |
 
 ## Findings
-| Severity | ID | Path | What's wrong | Cheapest deterministic fix |
-|---|---|---|---|---|
-| High | VG-1/2 | main agent | "Be thorough; check your work" + self-reported "all tests pass" — no hook, not state-anchored | Stop/PostToolUse hook gating on exit code + a baseline/after ledger (the-pre-completion-checklist, the-verification-ledger) |
-| High | VG-8 | grader.py | asserts the tool-call sequence, not the end-state | grade outcome: pytest exit code / schema state (grade-the-outcome) |
-| High | VG-9 | red-green | agent may edit tests to pass them | lock tests in green; confirm red first (red-green-for-agents) |
+| Severity | ID | Path | What's wrong | Cheapest deterministic fix | Fix → lesson |
+|---|---|---|---|---|---|
+| High | VG-1/2 | main agent | "Be thorough; check your work" + self-reported "all tests pass" — no hook, not state-anchored | Stop/PostToolUse hook gating on exit code + a baseline/after ledger | checks.md → VG-1, VG-2 |
+| High | VG-8 | grader.py | asserts the tool-call sequence, not the end-state | grade outcome: pytest exit code / schema state | checks.md → VG-8 |
+| High | VG-9 | red-green | agent may edit tests to pass them | lock tests in green; confirm red first | checks.md → VG-9 |
 
 **Passing gates:** <which, and the mechanism that makes them hold.>
 **Floor note (VG-11):** <any gate NOT demanded because its floor isn't met — e.g. throwaway/stateless.>

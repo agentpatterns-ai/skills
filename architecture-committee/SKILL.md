@@ -1,8 +1,8 @@
 ---
 name: architecture-committee
-description: Convene a debiased multi-persona committee to vet an architecture / design decision for a feature, spec, or PRD — distinct personas independently propose, steelman their pick AND its opposite, cross-examine across capped debate rounds, then converge on the approach that fits THIS spec rather than the model's default priors. Invoke when asked to "form/convene a committee", weigh architecture or technology options, or pressure-test a design choice before committing. Skip when you are auditing or detecting problems in an existing instruction file / config (use audit-instruction-file or audit-lethal-trifecta), compressing a prompt (use compress-prompt), or when the decision is trivial / already made and only execution remains.
+description: Convene a debiased multi-persona committee to vet an architecture / design decision for a feature, spec, or PRD — distinct personas independently propose, steelman their pick AND its opposite, cross-examine across capped debate rounds, then converge on the approach that fits THIS spec rather than the model's default priors. Invoke when asked to "form/convene a committee", weigh architecture or technology options, or pressure-test a design choice before committing. Skip when you are auditing or detecting problems in an existing instruction file / config (use audit-instruction-file or audit-lethal-trifecta), auditing the coordination mechanics of a multi-agent system already built and running (use audit-multi-agent-orchestration), compressing a prompt (use compress-prompt), or when the decision is trivial / already made and only execution remains.
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /architecture-committee [goal | spec | PRD | feature description]
 ---
 
@@ -11,12 +11,14 @@ usage: /architecture-committee [goal | spec | PRD | feature description]
 A lone agent's architecture pick inherits its built-in priors — reflexive reaches for familiar
 frameworks, languages, "default" solutions regardless of fit. The committee **surfaces and
 neutralises those biases** so the recommendation follows from the spec, not from what's popular in
-training data. Empirically backed for **high-stakes, hard-to-reverse decisions**: *N* independent
+training data. The *mechanism* is empirically backed: *N* independent
 instances answer, then critique each other and revise, converging — typically **≤3 rounds** — with
 gains in reasoning and factual validity ([Du et al. 2023, arXiv:2305.14325](https://arxiv.org/abs/2305.14325), "society of
-minds"); at equal compute on routine calls, debate often does **not** beat a strong single pass, and
+minds"). The **high-stakes, hard-to-reverse** scoping is the corpus's, not the papers': debate earns
+its cost only for consequential, hard-to-reverse decisions — architecture choices are its canonical
+case — because at equal compute on routine calls it often does **not** beat a strong single pass, and
 majority pressure can converge agents on a confident wrong answer ([opponent-processor-debate,
-*Empirical caveats*](https://agentpatterns.ai/multi-agent/opponent-processor-debate/)) — hence the Skip-when boundary. The active ingredient is **diversity, not repetition**: group diversity and intrinsic
+*When to apply* / *Empirical caveats*](https://agentpatterns.ai/multi-agent/opponent-processor-debate/)) — hence the Skip-when boundary. The active ingredient is **diversity, not repetition**: group diversity and intrinsic
 reasoning strength dominate debate success ([arXiv:2601.19921](https://arxiv.org/pdf/2601.19921)),
 and independent attempts explore trade-offs no single pass reaches
 ([fan-out synthesis](https://agentpatterns.ai/multi-agent/fan-out-synthesis/)).
@@ -29,9 +31,12 @@ it wins or breaks. Three guardrails are structural, not requests:
   the first stated framing anchor every later voice
   ([opponent-processor debate](https://agentpatterns.ai/multi-agent/opponent-processor-debate/);
   [Du 2023](https://arxiv.org/abs/2305.14325)).
-- **Cap the rounds.** ≤3 debate rounds; deeper single-thread iteration plateaus while *breadth*
-  (more diverse personas) keeps paying ([arXiv:2502.10858](https://arxiv.org/abs/2502.10858)). Spend
-  budget on personas, not rounds.
+- **Cap the rounds.** ≤3 debate rounds — convergence typically lands within 3
+  ([Du 2023](https://arxiv.org/abs/2305.14325)), two-to-three rounds covers most cases, and unbounded
+  debate deadlocks or drifts
+  ([committee-review-pattern](https://agentpatterns.ai/code-review/committee-review-pattern/)). Spend
+  budget on personas, not rounds — by analogy with single-model test-time scaling, where iteration
+  depth plateaus while *breadth* keeps paying ([arXiv:2502.10858](https://arxiv.org/abs/2502.10858)).
 - **Diverse convergence only.** Two agents that think alike agreeing tells you nothing; weigh
   cross-persona agreement, and reject a "winner" that won on rhetoric rather than fit.
 
@@ -43,7 +48,9 @@ it wins or breaks. Three guardrails are structural, not requests:
 ## Scope
 Decides **how to build** a stated thing: architecture, technology, framework, approach trade-offs.
 **Out of scope:** auditing an existing instruction file or harness (use `audit-instruction-file` /
-`audit-lethal-trifecta`), compressing a prompt (`compress-prompt`), writing the implementation, and
+`audit-lethal-trifecta`), auditing the coordination mechanics of a multi-agent system already built
+and running (`audit-multi-agent-orchestration` — the committee runs *before* the system exists),
+compressing a prompt (`compress-prompt`), writing the implementation, and
 making the final call — the committee recommends; it does not commit.
 
 ## Procedure (the vetting loop)
@@ -51,8 +58,9 @@ The full protocol — persona table, named-bias catalog, round mechanics, conver
 [`committee.md`](committee.md); load it when convening. The operational sequence:
 
 1. **Convene personas** — pick the distinct, opinionated viewpoints this decision turns on;
-   `committee.md`'s default panel is the fallback. *Done when 5–7 genuinely-distinct voices are
-   named, each optimising for a different constraint the spec actually has.*
+   `committee.md`'s default panel is the fallback. *Done when every binding constraint the spec
+   actually has carries one named voice optimising for it and no two voices share an optimisation
+   target — typically 3–7 voices; the count follows the constraints, not a quota.*
 2. **Blind independent proposals** — fan out one sub-agent per persona, each prompted with a
    deliberately divergent persona framing, none seeing another's output (protocol Round 0).
    *Done when every persona has proposed an approach produced in its own separate context.*
@@ -101,13 +109,16 @@ change it: <…>. **The committee does not commit this; you make the call.**
 
 ## Related / pairing (the cited why)
 - **Siblings:** detecting problems in an existing file/config → `audit-instruction-file` /
-  `audit-lethal-trifecta`; compressing a prompt → `compress-prompt` (this skill only *decides*).
+  `audit-lethal-trifecta`; auditing a running multi-agent system's coordination mechanics →
+  `audit-multi-agent-orchestration` (the committee decides the topology *before* it exists);
+  compressing a prompt → `compress-prompt` (this skill only *decides*).
 - **Debate beats a lone pass** (on high-stakes calls — see the intro's equal-compute caveat) —
   independent instances catch each other's errors and converge ≤3
   rounds ([Du 2023](https://arxiv.org/abs/2305.14325)); the multi-agent generalisation of
   self-consistency ([Wang et al. 2022, arXiv:2203.11171](https://arxiv.org/abs/2203.11171)).
 - **Diversity is the lever, not round count** — diversity + reasoning strength dominate
-  ([arXiv:2601.19921](https://arxiv.org/pdf/2601.19921)), breadth > depth ([arXiv:2502.10858](https://arxiv.org/abs/2502.10858)), and each persona must *reframe* the spec, not restate it ([EoP, arXiv:2506.03573](https://arxiv.org/abs/2506.03573)) — convergence then weighs cross-perspective agreement, where independent sources agreeing is the confidence signal ([MPSC, arXiv:2309.17272](https://arxiv.org/abs/2309.17272); [multi-model plan synthesis](https://agentpatterns.ai/multi-agent/multi-model-plan-synthesis/)).
+  ([arXiv:2601.19921](https://arxiv.org/pdf/2601.19921)), breadth > depth (single-model
+  test-time-scaling analogy — [arXiv:2502.10858](https://arxiv.org/abs/2502.10858)), and each persona must *reframe* the spec, not restate it ([EoP, arXiv:2506.03573](https://arxiv.org/abs/2506.03573)) — convergence then weighs cross-perspective agreement, where independent sources agreeing is the confidence signal ([MPSC, arXiv:2309.17272](https://arxiv.org/abs/2309.17272); [multi-model plan synthesis](https://agentpatterns.ai/multi-agent/multi-model-plan-synthesis/)).
 
 ## Critical rules (read last)
 - **The human makes the final call** — present vetted options; never silently pick or auto-commit.

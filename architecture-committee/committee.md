@@ -31,13 +31,25 @@ where voices think alike adds rounds without adding signal; a committee is justi
 decision needs **multiple independent directions at once**
 ([when many agents beat one](https://learn.agentpatterns.ai/multi-agent/when-many-agents/)). Prefer
 **breadth of persona over depth of iteration**
-([arXiv:2502.10858](https://arxiv.org/abs/2502.10858)). **Composition is done when the panel holds
-5–7 genuinely-distinct voices, each optimising for a different constraint the spec actually has** —
-that beats 3 voices arguing for 6 rounds.
+([arXiv:2502.10858](https://arxiv.org/abs/2502.10858) — a single-model test-time-scaling result,
+applied here by analogy). **Composition is done when every binding constraint the spec actually has
+carries one voice optimising for it and no two voices share an optimisation target** — typically
+3–7 voices; the count follows the constraints, not a quota (debate's cited gains appear with as few
+as 3 agents — [Du 2023](https://arxiv.org/abs/2305.14325)). A wider panel of genuinely-distinct
+voices beats the same voices arguing more rounds.
 
 ---
 
 ## Named-bias catalog (each persona calls out the bias it suspects, in cross-examination)
+
+The *mechanism* the catalog serves is cited; the six names are not. Single-agent outputs show
+**systematic bias toward one framing**
+([opponent-processor-debate](https://agentpatterns.ai/multi-agent/opponent-processor-debate/)), and
+role framing shifts which risks a voice surfaces
+([committee-review-pattern](https://agentpatterns.ai/code-review/committee-review-pattern/)). The
+table below is this skill's **operational convention** — informal industry labels for the recurring
+default-prior failure modes, kept as a shared cross-examination vocabulary, not a cited taxonomy
+(recorded as such in the source map).
 
 | Bias | Symptom in an opinion | Probe that exposes it |
 |---|---|---|
@@ -49,8 +61,10 @@ that beats 3 voices arguing for 6 rounds.
 | **Default / popularity** | "everyone uses X" stands in for a reason | "Cite the constraint, not the popularity." |
 
 These are the failure modes the committee exists to neutralise: a lone agent's recommendation is a
-sample from its training-data priors; the debate's job is to make each prior *argue for itself
-against an equally-strong opposite* and lose if it cannot.
+sample from its training-data priors — the systematic one-framing bias above — and the debate's job
+is to make each prior *argue for itself against an equally-strong opposite* and lose if it cannot
+(an agent told to defend a decision surfaces different evidence than one told to challenge it —
+[opponent-processor-debate](https://agentpatterns.ai/multi-agent/opponent-processor-debate/)).
 
 ---
 

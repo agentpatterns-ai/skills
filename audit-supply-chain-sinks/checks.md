@@ -42,15 +42,19 @@ Remediation lesson for SS-1/2/5/6/7/8: [the-output-is-untrusted-too](https://lea
 
 ## SS-3 — Install authority ungated by lockfile / existence check (slopsquatting)
 - **Flags:** the agent can `uv add` / `npm install` / `pip install` an **agent-named** package with no
-  lockfile-enforced resolution (`npm ci`, `uv pip sync`, `pip-compile --generate-hashes`) and no
-  registry existence+provenance check; manifest edits not gated behind a reviewed PR.
+  lockfile-enforced install (`npm ci`, `uv pip sync`, `pip-sync`) and no registry
+  existence+provenance check; manifest edits not gated behind a reviewed PR; the agent can both edit
+  the manifest **and** regenerate the lockfile (`uv lock`, `pip-compile --generate-hashes`) — lock
+  generation resolves whatever the manifest names into the lockfile, so that path is ungated even
+  with pip-compile in CI.
 - **Why:** LLMs hallucinate package names 5.2–21.7%; 43% persist across re-runs → enumerable →
   attackers pre-register them. Lanyado's `huggingface-cli` PoC drew >30k downloads ([slopsquatting](https://agentpatterns.ai/security/slopsquatting-hallucinated-package-names/);
   [Spracklen, USENIX Security 2025, arXiv:2406.10279](https://arxiv.org/abs/2406.10279)).
   Same training-distribution mechanism as agent-pinned vulnerable versions ([llm-pinned-vulnerable-versions](https://agentpatterns.ai/security/llm-pinned-vulnerable-versions/)).
-- **Fix:** lockfile-enforced install path (fails closed on any unendorsed name); registry
-  existence+provenance check at the install hook; remove the install leg and require a human-reviewed
-  PR for manifest changes ([blast-radius-containment](https://agentpatterns.ai/security/blast-radius-containment/)).
+- **Fix:** lockfile-enforced install path (fails closed on any unendorsed name), with lock
+  **regeneration** human/CI-gated — the agent proposes; a human or CI gate accepts the lockfile
+  change before install; registry existence+provenance check at the install hook; remove the install
+  leg and require a human-reviewed PR for manifest changes ([blast-radius-containment](https://agentpatterns.ai/security/blast-radius-containment/)).
   Lesson: [the-package-that-doesnt-exist](https://learn.agentpatterns.ai/security/the-package-that-doesnt-exist/).
   Auditor: `dependency-and-supply-chain` — pipe agent-generated requirements through lock-then-resolve.
 

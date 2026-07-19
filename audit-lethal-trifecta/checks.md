@@ -32,6 +32,12 @@ read-only.
   "Read(./secrets/**)"]`) — those denies constrain path-scoped read-family tools, Grep included. Flag
   PD only when a path to secrets/PII is actually reachable, not from an unscoped tool name in
   isolation.
+- **Do not invent this leg from content the path itself fetched.** Fetched pages/docs — even
+  "internal-only" ones — are the **untrusted-input** leg (LT-UI), not private-data access; counting
+  the same fetched content as both UI and a "partial PD" double-counts one surface into two legs and
+  over-escalates a partial-egress path into a partial trifecta. When credentials/PII/secret paths are
+  denied and the path reads no private store, PD is a real **No** — "don't collapse an ambiguous leg
+  to No" cuts the other way too: don't inflate an unambiguous No to Partial.
 
 ### LT-UI — Untrusted input
 - **Flags:** the path ingests content it did not author — `WebFetch` / web search, fetched pages,
@@ -60,6 +66,12 @@ read-only.
   restricts rather than removes the leg — so it still counts as the cheapest-leg fix even when that
   egress is required, and takes priority over quarantining untrusted input for this agent class (see
   the "coding/build/deploy agent tie-break" note in the mitigation map below).
+- **Non-coding agents whose core deliverable action IS egress** (e.g. an email-triage agent whose
+  task is sending replies): the egress leg is unavoidable by design, so recommend BOTH halves —
+  restrict egress deterministically to the deliverable channel (default-deny + an allowlist of the
+  single send endpoint) AND name a quarantine pattern for the untrusted-input leg; then layer
+  compensating controls for the residual trifecta — output scanning, rate-limiting, egress anomaly
+  detection ([threat model, *When This Backfires*](https://agentpatterns.ai/security/lethal-trifecta-threat-model/)).
 - **Partial leg:** content from a trusted-but-fetched source is lower-risk than open web — note it.
 
 ### LT-EG — External egress
@@ -73,10 +85,30 @@ read-only.
   [agent-network-egress-policy](https://agentpatterns.ai/security/agent-network-egress-policy/)).
   Remediation: [learn — the-lethal-trifecta](https://learn.agentpatterns.ai/security/the-lethal-trifecta/).
 - **Partial leg:** "read-only" fetch with no POST/PUT and a strict domain allowlist is reduced, not
-  removed — a TLS/hostname blind spot can still leak ([url-exfiltration-guard](https://agentpatterns.ai/security/url-exfiltration-guard/)). Mark partial.
+  removed — the URL itself is a data channel (private data encoded in the query string leaks to the
+  destination in the request, before any response is read), and redirect chains plus auto-fetched
+  embedded resources (images, iframes) bypass domain allowlists
+  ([url-exfiltration-guard](https://agentpatterns.ai/security/url-exfiltration-guard/)). Mark partial.
+- **Composed / deferred egress — an agent with no *direct* egress grant is NOT a closed-egress path.**
+  When the agent authors into a store or draft (`Write(./drafts/**)`, a reply buffer, a message body)
+  that a **downstream trusted component then hydrates and sends** — a token-resolver that substitutes
+  real PII at send time, a renderer / chat / email surface that auto-fetches embedded resources — that
+  component performs egress on the agent's behalf. Denied `WebFetch`/`curl`/`git push`, or "the agent
+  has no network tool", do **not** collapse egress to `No`: mark it **Partial (deferred)** and name the
+  downstream sender as the exfiltration point (and, for a tokenized-PD path, as the migrated
+  high-value target where the real values resolve *and* leave). *"An agent without a network tool is
+  not a closed-egress agent… the renderer performs egress on the user's behalf. The lethal trifecta
+  closes through composition, not a single tool grant"* — the composition that drove EchoLeak (2025)
+  and Copilot Cowork (2026)
+  ([agent-authored-message-rendered-image-exfiltration](https://agentpatterns.ai/security/agent-authored-message-rendered-image-exfiltration/)).
+  Carve-out: a plain-text surface an operator reads with no auto-fetch and no send-on-behalf is not a
+  deferred-egress sink — don't inflate it. Remediation: [learn — the-lethal-trifecta](https://learn.agentpatterns.ai/security/the-lethal-trifecta/).
 
 > A path is a **trifecta** when LT-PD ∧ LT-UI ∧ LT-EG are all present (or ambiguously partial).
-> Audit each agent and sub-agent as its own path — sub-agents inherit nothing unless granted.
+> Audit each agent and sub-agent as its own path — record its **effective** toolset under the
+> harness's inheritance rule: in Claude Code, a sub-agent whose frontmatter omits `tools` inherits
+> **all** main-thread tools, MCP included ([Claude Code sub-agents docs](https://code.claude.com/docs/en/sub-agents)).
+> Never mark a leg "No" from an absent grant alone.
 
 ---
 
@@ -144,7 +176,7 @@ trifecta or is a config-write grant route; **Medium** when it leaves an ambiguou
 | Default-deny egress sandbox | egress | model-independent network block (preferred for coding agents) |
 | Dual-LLM / Action-Selector / Plan-Then-Execute / Context-Min / Code-Then-Execute | untrusted input | quarantine or fix the action set before untrusted content is trusted |
 | PII tokenization / scoped credentials / file exclusion | private data | strip sensitive data before it enters context |
-| LLM Map-Reduce | private data | each instance sees only a partition |
+| LLM Map-Reduce | partial only — never removes a leg outright | partitioning bounds private-data blast radius (each instance sees only its partition — a compromised instance leaks at most that slice); the primary paper classes it as **untrusted-input** isolation via strictly constrained map outputs — every partition still co-holds any UI + EG legs the path has, so pair it with a true leg-removal fix |
 
 **Coding/build/deploy agent tie-break:** for this agent class, egress-first stays the default fix even
 when egress is the path's own core deliverable action (the final push/deploy/notify call) — restrict

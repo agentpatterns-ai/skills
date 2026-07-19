@@ -13,11 +13,16 @@ Loaded on demand by `write-skill`. Apply each requirement while drafting. Each i
 
 ### WS-1 — Description doesn't state what + when + capabilities
 - **Flags:** a `description` that names capability but no trigger phrase a user would say, no
-  discriminating capability list, or (when a sibling's domain overlaps) no negative trigger.
+  discriminating capability list, or (when a sibling's domain overlaps) no negative trigger; a
+  frontmatter missing a required field (`name`, `description`, `user-invocable`, `usage`,
+  `version`), or one setting both `disable-model-invocation: true` and `user-invocable: false`.
 - **Why:** the description is a learned retrieval key the agent matches against user intent before
   any body content loads — structure it `[what] + [when] + [capabilities]` with concrete trigger
   phrases, and add a negative trigger to stop over-firing on an overlapping sibling
-  ([skill-authoring-patterns §Description craft](https://agentpatterns.ai/tool-engineering/skill-authoring-patterns/)).
+  ([skill-authoring-patterns §Description craft](https://agentpatterns.ai/tool-engineering/skill-authoring-patterns/));
+  the field contract — per-field defaults, invocation control, and the caveat that setting both
+  `disable-model-invocation: true` and `user-invocable: false` leaves the skill unreachable — is
+  specified in [skill-frontmatter-reference](https://agentpatterns.ai/tool-engineering/skill-frontmatter-reference/).
 - **Fix:** rewrite to the three-part structure; test with "when would you use this skill?" — see
   `skills-as-a-tool-surface`.
   Remediation: [learn — skills-as-a-tool-surface](https://learn.agentpatterns.ai/tool-engineering/skills-as-a-tool-surface/).
@@ -101,6 +106,9 @@ Loaded on demand by `write-skill`. Apply each requirement while drafting. Each i
   the broader hazard is an instruction file whose claims drift out of sync with reality while the
   agent keeps treating it as authoritative
   ([stale-ai-configuration-artifacts](https://agentpatterns.ai/anti-patterns/stale-ai-configuration-artifacts/)).
+  The collapsed "prior approach" aside itself is
+  [Anthropic's authoring-guide pattern](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
+  — cited transparently as external; the corpus page covers the drift-hazard class it prevents.
 - **Fix:** state the current approach undated; move superseded guidance to a collapsed "prior
   approach" note — see `configuration-smells`.
   Remediation: [learn — configuration-smells](https://learn.agentpatterns.ai/anti-patterns/configuration-smells/).

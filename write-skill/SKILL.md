@@ -1,8 +1,8 @@
 ---
 name: write-skill
-description: Write or substantially revise one SKILL.md — dispatch description craft (what + when + capabilities, trigger phrases), the knowledge-not-behavior boundary, degrees-of-freedom matching, positive framing, one-level-deep progressive disclosure, a Gotchas section, and eval-able output. Invoke when authoring a new agent skill or reworking an existing SKILL.md's frontmatter or body. Skip when reviewing or grading an existing skill's quality without rewriting it (use audit-skill-quality), auditing a plain instruction file that isn't a SKILL.md (use audit-instruction-file), or shrinking an existing prompt under a token budget (use compress-prompt).
+description: Write or substantially revise one SKILL.md — dispatch description craft (what + when + capabilities, trigger phrases), the knowledge-not-behavior boundary, degrees-of-freedom matching, positive framing, one-level-deep progressive disclosure, a Gotchas section, and eval-able output. Invoke when authoring a new agent skill or reworking an existing SKILL.md's frontmatter or body. Skip when reviewing or grading an existing skill's quality without rewriting it (use audit-skill-quality), writing or auditing a plain instruction file that isn't a SKILL.md (use audit-instruction-file), or shrinking an existing prompt under a token budget (use compress-prompt).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /write-skill [skill idea/purpose + target agent tool + rough scope, or an existing draft SKILL.md to revise]
 ---
 
@@ -39,11 +39,14 @@ detector pair); auditing a general natural-language instruction file that isn't 
 choosing whether a skill should exist at all versus a smaller artifact (a snippet, a CLAUDE.md line).
 
 ## Procedure
-1. **Restate purpose + boundary**, then write the `description` as `[what it does] + [when to use
-   it] + [key capabilities]`, with concrete trigger phrases a user would actually type and at least
-   one negative trigger if the domain overlaps a sibling (WS-1).
-   Done when the description names what, when, and capabilities, with no invoke-overlap against a
-   named sibling.
+1. **Restate purpose + boundary**, then write the frontmatter: the full required field set —
+   `name`, `description`, `user-invocable`, `usage`, `version` — with the `description` structured
+   as `[what it does] + [when to use it] + [key capabilities]`, concrete trigger phrases a user
+   would actually type, and at least one negative trigger if the domain overlaps a sibling (WS-1).
+   Set `disable-model-invocation: true` and `user-invocable: false` one at a time, never together —
+   both at once leaves the skill unreachable.
+   Done when the frontmatter carries all five required fields and the description names what, when,
+   and capabilities, with no invoke-overlap against a named sibling.
 2. **Apply the delta principle.** Cut anything the base model already knows (standard syntax,
    generic advice); keep only team conventions, domain rules, and the edge cases the model would
    otherwise get wrong (WS-2).
@@ -78,7 +81,7 @@ The ten core requirements above, plus two tail/advisory ones — answer the nine
 questions (goals/input/permissions/evidence/output/quality/verification/approval/handoff) through
 the spine, never as nine headings (WS-11); prefer a deterministic guardrail over a natural-language
 "never" for anything that must not fail, since prose alone documents, it doesn't enforce, and 29.9%
-of deployed skills silently violate their own declared rules on benign inputs (WS-12) — live in
+of 402 deployed `SKILL.md` files silently violated their own declared rules on benign inputs (WS-12) — live in
 [`checks.md`](checks.md); load it when drafting.
 
 ## Output template
@@ -102,20 +105,26 @@ description: Write or review a Terraform module against team conventions — var
   backend config, provider version pinning. Invoke when authoring a new .tf module or reviewing one
   before a PR. Skip when running terraform commands interactively (use the CLI directly) or auditing
   cloud IAM policy (use a security-review skill).
+user-invocable: true
+usage: /write-terraform-module [module purpose + providers, or an existing module to review]
+version: "0.1.0"
 ---
 **Stance** — generate a draft module for review; never apply infrastructure changes directly.
 
 ## Gotchas
-- **Missing a `required_version` pin lets a provider upgrade silently break state** — pin
-  `required_providers` version constraints in every module.
-- **A default on a `sensitive` variable still shows in `terraform plan` diffs** — mark it
-  `sensitive = true` at the output too, not just the variable.
+- **A missing `required_providers` version constraint lets a provider upgrade silently break
+  state** — constrain every provider's version in every module; `required_version` pins only the
+  Terraform CLI, not providers.
+- **An output that references a `sensitive` variable fails `terraform plan` unless the output is
+  itself marked `sensitive`** — set `sensitive = true` on the derived output too, not just the
+  variable.
 
 ## Critical rules (read last)
-- **Pin every provider version.** An unpinned provider is the highest-frequency state-corruption cause.
+- **Pin every provider version.** An unpinned provider is a common cause of silent state corruption.
 - **Type every variable explicitly.** No bare `variable "x" {}` blocks.
 ```
-The correction: description now states what/when/capabilities with a real skip clause (WS-1); the
+The correction: the frontmatter carries the full required field set, and the description states
+what/when/capabilities with a real skip clause (WS-1); the
 generic "don't write bad Terraform" is gone (WS-2, no-op test); prohibitions became positive
 requirements except the still-negative "never apply directly" (an absolute, WS-5); a Gotchas section
 replaced vague don'ts with named mistake+fix pairs (WS-7).

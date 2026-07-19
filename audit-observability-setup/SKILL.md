@@ -1,8 +1,8 @@
 ---
 name: audit-observability-setup
-description: Audit an agent harness's observability setup — is a long/autonomous/multi-agent run legible enough to confirm it worked and catch it when it fails — OTel exporters, maxTurns + loop-detection circuit breakers, agent_id trace propagation, per-source context attribution, a wired regression gate, and a trajectory trail. Invoke when reviewing or building a harness that runs long, autonomous, or multi-agent work (settings.json hooks/telemetry, subagent instrumentation, CI eval gates, progress files). Skip when a single-shot/stateless prompt has nothing to instrument, or when judging whether a gate's grading is correct (use audit-verification-gates) rather than whether observability is wired.
+description: Audit an agent harness's observability setup — is a long/autonomous/multi-agent run legible enough to confirm it worked and catch it when it fails — OTel exporters, maxTurns + loop-detection circuit breakers, agent_id trace propagation, per-source context attribution, a wired regression gate, and a trajectory trail. Invoke when reviewing or building a harness that runs long, autonomous, or multi-agent work (settings.json hooks/telemetry, subagent instrumentation, CI eval gates — is one wired and trace-coupled — progress files). Skip when a single-shot/stateless prompt has nothing to instrument, when judging whether a gate's grading is correct (use audit-verification-gates) rather than whether observability is wired, when asking whether a missing turn/spend cap leaves damage unbounded rather than whether the runaway is visible and auto-halted (use audit-harness-safety), or when the cost question is prompt-cache hit-rate — cache_read vs cache_creation metering (use audit-prompt-cache-hygiene).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-observability-setup [path-to-agent-config-or-repo]
 ---
 
@@ -88,9 +88,11 @@ auditing.
 **Smallest high-impact change:** <the one wire to add first.>
 **Suppressed (run shape):** <which checks, and why they don't apply.>
 ```
-Severity: **High** = missing runtime safety control (breaker/loop), telemetry blackout, or a trail
-that lies (premature "done"); **Med** = wired-but-incomplete pillar (gate runs but verdict not
-trace-coupled; attribution present but lying denominator); **Low** = legibility tightening.
+Severity: **High** = missing runtime safety control (breaker/loop), telemetry blackout, a trail
+that lies (premature "done"), or no agent-legible signal (blind-agent trap); **Med** = absent or
+wired-but-incomplete pillar (gate missing or verdict not trace-coupled; attribution missing or
+lying denominator; identity gaps); **Low** = legibility tightening. Buckets by check ID — absent
+and partial states alike — live in [`checks.md`](checks.md); never improvise a severity.
 
 ## Related / pairing
 - Seam with **`audit-verification-gates`**: this checks the gate is *wired and trace-coupled*;

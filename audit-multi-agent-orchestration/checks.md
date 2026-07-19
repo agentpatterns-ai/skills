@@ -5,7 +5,7 @@ and loop. Each item: ID / **Flags** / **Why** (cited) / **Fix** (enforced, not p
 is read-only. Remediation links point to the matching `learn` lesson for step-order.
 
 > **Ceremony guard (run first).** Structured handoffs and gates add overhead that is *not* always
-> justified — they "pay off only when work genuinely crosses agent boundaries"
+> justified — they "pay off only when work crosses agent boundaries"
 > ([agent-handoff-protocols, *When This Backfires*](https://agentpatterns.ai/multi-agent/agent-handoff-protocols/);
 > [lead-teammate, solo-task backfire](https://agentpatterns.ai/multi-agent/lead-teammate-plan-approval-handshake/)).
 > On a solo, single-stage, low-stakes task, a heavy schema + plan-approval gate is **ceremony, not a
@@ -26,9 +26,9 @@ is read-only. Remediation links point to the matching `learn` lesson for step-or
 - **Flags:** an upstream agent feeds a downstream agent with free prose and no declared output schema
   — no `## Returns`/`## Output` section, no JSON/YAML block, no `returns:`/`output_schema:`
   frontmatter. Field extraction then depends on the receiver parsing natural language.
-- **Why:** structured handoffs make field extraction deterministic; "most multi-agent failures stem
-  from missing structure at handoff points, not model capability," and every boundary should be
-  validated — no untyped data crosses ([agent-handoff-protocols](https://agentpatterns.ai/multi-agent/agent-handoff-protocols/);
+- **Why:** structured handoffs make field extraction deterministic; "Most multi-agent failures come
+  from missing structure at handoff points, not from gaps in model capability," and every boundary
+  should be validated — no untyped data crosses ([agent-handoff-protocols](https://agentpatterns.ai/multi-agent/agent-handoff-protocols/);
   [typed-schemas-at-agent-boundaries](https://agentpatterns.ai/multi-agent/typed-schemas-at-agent-boundaries/)).
 - **Fix:** declare an explicit output schema at the boundary — at minimum the four fields
   done / found / needs-attention / unresolved
@@ -73,14 +73,15 @@ is read-only. Remediation links point to the matching `learn` lesson for step-or
 - **Flags:** a fan-out/synthesis topology spawns N workers with **identical instructions AND
   identical context** and **no engineered spread** — no temperature variation, no per-worker
   seed/reference-context variation, no system-prompt-emphasis variation. The workers differ only in
-  count, so the fan-out collapses to conformity rather than genuine diversity. (Independent contexts
-  alone do not satisfy this — the page's own example varies temperature *and* prompt emphasis per
-  agent.)
-- **Why:** fan-out's value is ensemble variance — "The key condition is genuine diversity: if agents
-  converge, there is nothing to exploit"; "Identical instructions do not guarantee identical outputs"
-  so you must "maximize spread" by varying temperature, seed context, or system-prompt emphasis. Left
-  uniform, **"conformity bias collapses diversity"** — agents given the same prompt converge on the
-  same approach, paying N× compute for one effective sample
+  count, so the fan-out collapses to conformity rather than genuine diversity. (Running the workers
+  in separate context windows is the pattern's baseline, not engineered spread — spread means varied
+  temperature, seed/reference context, or prompt emphasis; the page's own example varies temperature
+  *and* prompt emphasis per agent.)
+- **Why:** fan-out's value is ensemble variance — "The condition that matters is genuine diversity:
+  if the agents converge, there is nothing to exploit"; "Identical instructions do not guarantee
+  identical outputs" so widen the spread by varying temperature, seed context, or system-prompt
+  emphasis. Left uniform, **"Conformity bias collapses diversity"** — agents given the same prompt
+  can converge on the same approach, paying N× compute for one effective sample
   ([fan-out-synthesis, *Why It Works / Diversity Mechanisms / When This Backfires*](https://agentpatterns.ai/multi-agent/fan-out-synthesis/)).
 - **Fix:** engineer spread across the N workers — vary temperature between instances, give each a
   different seed/reference context, or differentiate system-prompt emphasis (brevity / robustness /
@@ -93,16 +94,19 @@ is read-only. Remediation links point to the matching `learn` lesson for step-or
 ## Gates & verification (MA-V*)
 
 > **Discriminator (run first, mutually exclusive).** Search for a distinct critic/verifier
-> **agent definition** — its own dedicated file/prompt (e.g. a `critic.md` alongside `worker.md`), not
-> just a call that reuses the generic worker spawn path with a different role-name string or prompt
-> argument. **An ad-hoc `spawn_worker("critic", ...)`-style call with no separate agent definition
-> file does NOT count as a verifier existing** — it's the same producer machinery relabeled, still
-> self-administered. **Nothing found ⇒ MA-V1**, full stop — regardless of how the producer's own
-> completion call looks (`mark_done()`, a self-set status flag, a loop that only breaks on that
-> relabeled call's verdict, etc.); there is no verifier to be mis-wired. **MA-V2 applies only when a
-> genuinely separate verifier agent/role definition exists** and is wired wrong (its verdict isn't
-> checked, it isn't independent, it's off the critical path, or it lacks precision evidence). Never
-> label a no-dedicated-verifier-definition case MA-V2.
+> **definition** — a dedicated agent file (e.g. a `critic.md` alongside `worker.md`) *or* a dedicated
+> verifier prompt/model wired to the critic role in code (its own system-prompt constant, model id, or
+> evidence sources, even when launched through a shared spawn helper). The corpus defines verifier
+> independence by **model class, prompt context, and evidence sources — not file layout**
+> ([verify-gated-completion, four conditions](https://agentpatterns.ai/multi-agent/verify-gated-completion-admission-control/)).
+> **A role-name string alone does NOT count as a verifier existing** — an ad-hoc
+> `spawn_worker("critic", work_product)`-style call that reuses the producer's machinery with no
+> verifier prompt of its own is the same producer relabeled, still self-administered. **No verifier
+> definition found ⇒ MA-V1** — regardless of how the producer's own completion call looks
+> (`mark_done()`, a self-set status flag, a loop that only breaks on that relabeled call's verdict,
+> etc.); there is no verifier to be mis-wired. **MA-V2 applies when a genuinely distinct verifier
+> definition exists** — file- or code-defined — and is wired wrong (its verdict isn't checked, it
+> isn't independent, it's off the critical path, or it lacks precision evidence).
 
 ### MA-V1 — No independent verifier gate on "done" (producer self-declares)
 - **Flags:** the agent that did the work also declares it complete; no separate read-only verifier on
@@ -149,11 +153,14 @@ is read-only. Remediation links point to the matching `learn` lesson for step-or
 - **Flags:** a generator-critic (evaluator-optimizer) or debate loop with no hard round cap — exits
   only on PASS (`while True:`). Edge sub-check: the loop runs on an already-strong baseline.
 - **Why:** Anthropic's reference implementation ships an unbounded `while True:` that only exits on
-  PASS, so "production callers must impose their own cap … a starting limit of 3 is common"; and on a
+  PASS, so production callers must set their own cap — "A starting limit of 3 is common"; and on a
   task the generator already scores ~98%, a self-critique loop dropped accuracy to ~57%
-  ([evaluator-optimizer](https://agentpatterns.ai/agent-design/evaluator-optimizer/)).
-- **Fix:** impose a hard `max_rounds` (start at 3) with deadlock detection; skip the loop entirely on
-  a strong baseline ([learn: evaluator-optimizer](https://learn.agentpatterns.ai/harness-engineering/evaluator-optimizer/)).
+  ([evaluator-optimizer](https://agentpatterns.ai/agent-design/evaluator-optimizer/)). For debate
+  loops, "Include a max-round limit and deadlock detection in any automated synthesis" — two agents
+  with opposing incentives can loop without convergence
+  ([opponent-processor-debate](https://agentpatterns.ai/multi-agent/opponent-processor-debate/)).
+- **Fix:** impose a hard `max_rounds` (start at 3); on a debate loop add deadlock detection; skip the
+  loop entirely on a strong baseline ([learn: evaluator-optimizer](https://learn.agentpatterns.ai/harness-engineering/evaluator-optimizer/)).
 
 ---
 

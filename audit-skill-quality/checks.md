@@ -32,10 +32,19 @@ read-only — flag and recommend, never rewrite (that is `write-skill`).
 - **Fix:** rename to a verb-noun form matching the directory. Remediation: [learn — skills-as-a-tool-surface](https://learn.agentpatterns.ai/tool-engineering/skills-as-a-tool-surface/).
 
 ### AQ-3 — Required frontmatter fields missing or malformed
-- **Flags:** a missing `name`/`description`/invocation-mode field, an unset version-equivalent, or a
-  `description` that is empty, truncated, or carries markup the frontmatter contract forbids.
-- **Why:** the frontmatter is a contract with fixed required fields; a skill missing one is
-  malformed at the surface an agent reads first
+- **Flags:** a missing `name` or `description` — the fields the frontmatter contract universally
+  requires — or a `description` that is empty, truncated, or carries markup the contract forbids.
+  A missing version-equivalent or invocation-mode field is a finding **only when the target tool's
+  schema or the library's own frontmatter convention requires it**; most tools treat those as
+  optional metadata, so don't file them as required-field defects against a standard-conformant
+  skill. **The file's own field set is convention evidence** — a frontmatter already carrying
+  non-universal contract fields (`user-invocable`, `usage`, …) signals a library convention that
+  includes a version-equivalent, so an absent `version` there fires this check (recommend a semver
+  value) even in a single-file audit with no sibling files in view; ground the finding in the
+  convention tier, not a claim that `version` is universally required.
+- **Why:** the frontmatter is a contract, but its universally required core is `name` +
+  `description`; the rest is per-tool/per-library schema (most fields are optional metadata) — a
+  skill missing a core field is malformed at the surface an agent reads first
   ([contractual-skill-files](https://agentpatterns.ai/instructions/contractual-skill-files/),
   [skill-frontmatter-reference](https://agentpatterns.ai/tool-engineering/skill-frontmatter-reference/)).
 - **Fix:** add the missing field(s); validate against the target tool's frontmatter schema.
@@ -57,9 +66,12 @@ read-only — flag and recommend, never rewrite (that is `write-skill`).
 ## Body / governance (first-class)
 
 ### AQ-5 — Body too long / attention curve wasted / compliance ceiling
-- **Flags:** a body pushing well past ~100 lines (or ~5,000 tokens) with no reference file split; a
-  costliest guardrail buried mid-body instead of at the primacy or recency edge; a closing section
-  that's a footer, not a restated guardrail.
+- **Flags:** a body pushing well past the ~5,000-token skill-size ceiling with no reference file
+  split (the hard, cited limit); a body past ~100 lines still carrying catalog/template content
+  that belongs in a bundled reference file (a soft structural signal, not the cited ceiling — the
+  two thresholds are ~5x apart, don't treat them as interchangeable); a costliest guardrail buried
+  mid-body instead of at the primacy or recency edge; a closing section that's a footer, not a
+  restated guardrail.
 - **Why:** compliance degrades as aggregate rule count and body length grow; every line pays a
   context load and a human cognitive load, so depth belongs in on-demand reference files, not the
   always-scanned body ([instruction-compliance-ceiling](https://agentpatterns.ai/instructions/instruction-compliance-ceiling/),
@@ -123,12 +135,16 @@ read-only — flag and recommend, never rewrite (that is `write-skill`).
 ### AQ-11 — Untestable / no eval axis named
 - **Flags:** a skill with no stated way to check it changed behavior — no with-skill-vs-baseline
   comparison, no trigger-precision cases (does it fire/not-fire correctly on positive and negative
-  prompts).
+  prompts) — **and no eval evidence discoverable adjacent to it** (a harness/eval directory, a CI
+  eval gate, a recorded baseline run). Absence from the `SKILL.md` alone is not absence of evals —
+  many libraries keep eval suites beside, not inside, the published file; ask where the evals live
+  before flagging, and when only the in-file statement is missing, downgrade the finding to
+  advisory.
 - **Why:** a skill's job is to change agent behavior on two independent axes — output quality and
   trigger precision — and both need a paired with-skill/baseline run to verify
   ([skill-evals](https://agentpatterns.ai/verification/skill-evals/)).
 - **Fix:** add at least one with-skill-vs-baseline case and one trigger-precision (positive +
-  negative) case. Remediation: [learn — the-skill-eval-loop](https://learn.agentpatterns.ai/claude-code/the-skill-eval-loop/).
+  negative) case, or point the skill at the eval suite that already covers it. Remediation: [learn — the-skill-eval-loop](https://learn.agentpatterns.ai/claude-code/the-skill-eval-loop/).
 
 ---
 

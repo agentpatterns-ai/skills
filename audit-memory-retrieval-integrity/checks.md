@@ -112,15 +112,17 @@ walk-through). All detection is read-only. Two families: **authorization** (MR-A
   with no source-trust guard and no per-entry provenance tag; worse if the same principal also has
   egress (cross-session exfil trifecta).
 - **Why:** no memory backend is safe by construction — provenance blindness lets a dormant payload be
-  written in one session and activated to exfiltrate in a later one; review and activation windows
-  differ ([rag-poisoning-robustness](https://agentpatterns.ai/security/rag-architecture-poisoning-robustness/),
-  cross-referenced by the auditor `memory-and-retrieval-poisoning` cluster).
+  written in one session and activated to exfiltrate in a later one; write-time review happens in a
+  context that lacks the trigger, so review and activation windows differ
+  ([trojan-hippo-memory-attack](https://agentpatterns.ai/security/trojan-hippo-memory-attack/), also
+  cited by the auditor `memory-and-retrieval-poisoning` cluster).
 - **Fix:** restrict memory writes to user-authored / human-curated sources; attach a per-entry
   provenance tier and filter on it at retrieval; gate writes with a confirmation step; remove one
-  trifecta leg (deny untrusted writes / tokenize PII / default-deny egress). **High** when untrusted
-  writes + egress co-exist; else **Medium**. *Seam:* MR-I3 owns the **memory-store audit**; the
-  cross-session trifecta composition it enables (write→read pivot to exfiltration) is
-  `audit-lethal-trifecta` (LT-A4). Remediation:
+  trifecta leg (deny untrusted writes / tokenize PII / default-deny egress). **High** when the audited
+  artifact shows untrusted writes + egress co-existing on one principal — score it locally when one
+  scan surfaces both; else **Medium**. *Seam:* MR-I3 owns the **memory-store audit**; the
+  cross-session trifecta composition that co-existence enables (write→read pivot to exfiltration) is
+  `audit-lethal-trifecta` (LT-A4) — a High here also names that handoff in the finding. Remediation:
   [learn — the-payload-that-waits](https://learn.agentpatterns.ai/security/the-payload-that-waits/).
 
 ---

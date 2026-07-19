@@ -57,8 +57,8 @@ across processes.*
 | **Backward compatibility** (semantic versioning; Hyrum's Law) | a breaking change — removed/renamed field, changed type/semantics — to a published contract without a major version/deprecation path; remember Hyrum's Law: *all* observable behaviour is contract | additive-only evolution; deprecate-then-remove; version the endpoint/event |
 | **Pagination mandatory** (Nygard Unbounded Result Sets, applied at the contract) | a new collection endpoint returning the full set | cursor/keyset pagination from day one (offset breaks under mutation) |
 | **Idempotency keys for mutations** (Hohpe & Woolf, *EIP* Idempotent Receiver; Stripe's idempotency-key convention) | an unsafe retriable mutation (payment, order) with no idempotency key | accept an idempotency key; return the original result on replay |
-| **Concurrency control** (HTTP conditional requests — RFC 7232; Fowler Optimistic Offline Lock) | update endpoints with last-write-wins semantics | ETag/If-Match or a version field (optimistic concurrency) |
-| **Error contract consistency** (RFC 7807 Problem Details) | ad-hoc error shapes per endpoint; internals leaked in error bodies | one machine-readable error shape (e.g. RFC 7807 Problem Details — *gloss:* a standard JSON error body with type/title/status) |
+| **Concurrency control** (HTTP conditional requests — RFC 9110; Fowler Optimistic Offline Lock) | update endpoints with last-write-wins semantics | ETag/If-Match or a version field (optimistic concurrency) |
+| **Error contract consistency** (RFC 9457 Problem Details — obsoletes RFC 7807) | ad-hoc error shapes per endpoint; internals leaked in error bodies | one machine-readable error shape (e.g. RFC 9457 Problem Details — *gloss:* a standard JSON error body with type/title/status) |
 | **Tolerant Reader** (Fowler — *gloss:* consumers ignore unknown fields rather than failing) | a consumer that hard-fails on any unrecognized field of a contract it doesn't own | read only what you need; ignore unknowns; validate what you use |
 
 ## Observability & operations

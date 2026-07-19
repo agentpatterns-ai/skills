@@ -22,8 +22,9 @@ tools, context capture. When you spot one, surface it; don't silently act on it.
   this section stays a small, stable protocol.            <!-- SIP-1, SIP-7 -->
 - **Deltas, never rewrites.** Any edit to this section or an instruction file is an additive, surgical
   delta — never regenerate or wholesale-rewrite the file.  <!-- SIP-2 -->
-- **Gate every persisted change on objective evidence.** Before any learning/skill/instruction persists,
-  it must pass a write-gate: **interactive** = explicit human confirmation; the gate is an eval / test /
+- **Gate every persisted change (two-part).** Before any learning/skill/instruction persists it must pass
+  **(a) the approval boundary** — **interactive** = explicit human confirmation; **autonomous** = file to
+  the backlog, never apply — AND **(b) the evidence standard** — the change is justified by an eval / test /
   objective check, **never my own say-so** (no self-certified "this is better").   <!-- SIP-3 -->
 - **Protect the source-of-truth core.** [<CLAUDE.md + CONTEXT.md, etc.>] is the protected core. A proposed
   learning may refine it, but may **never contradict** it.  <!-- SIP-4 -->

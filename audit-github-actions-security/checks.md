@@ -67,7 +67,9 @@ immutable, least-privilege, deterministic control.
   version refs widen ([agent-emitted-dependency-ranges](https://agentpatterns.ai/security/agent-emitted-dependency-ranges/);
   GitHub *pin actions to a full-length commit SHA*; OWASP CICD-SEC-3 / artifact integrity CICD-SEC-9).
 - **Fix:** pin every third-party `uses:` to a full commit SHA (keep the version in a trailing comment)
-  and let Dependabot bump it via reviewed PRs. Remediation: [the-package-that-doesnt-exist](https://learn.agentpatterns.ai/security/the-package-that-doesnt-exist/).
+  and let Dependabot bump it via reviewed PRs. Remediation: [the-package-that-doesnt-exist](https://learn.agentpatterns.ai/security/the-package-that-doesnt-exist/)
+  (*nearest lesson — teaches the same fail-closed exact-pin control via lockfile-enforced installs;
+  the action-SHA mechanics are in the GitHub pin-to-full-SHA doc above*).
 
 ## GHA-4 — `GITHUB_TOKEN` over-privileged / no `permissions:` block (IAM · CICD-SEC-2/5)
 - **Flags:** no top-level `permissions:` key (the token defaults to the broad repo/org default, often
@@ -134,7 +136,7 @@ immutable, least-privilege, deterministic control.
   OWASP CICD-SEC-8 Ungoverned Usage of 3rd Party Services).
 - **Fix:** pin the installer to a version + verify a checksum/signature before executing; prefer a
   SHA-pinned action; constrain runner egress to an allowlist. Remediation:
-  [the-url-is-the-leak](https://learn.agentpatterns.ai/security/the-url-is-the-leak/).
+  [the-model-is-not-the-firewall](https://learn.agentpatterns.ai/security/the-model-is-not-the-firewall/).
 
 ## GHA-9 — Artifacts built/published without integrity or provenance (CICD-SEC-9)
 - **Flags:** build/release/publish steps that emit artifacts (images, packages, release assets) with
@@ -146,20 +148,24 @@ immutable, least-privilege, deterministic control.
   SLSA / GitHub artifact attestations `actions/attest-build-provenance`; OWASP CICD-SEC-9).
 - **Fix:** generate build-provenance attestations and sign artifacts/images; publish + verify
   checksums; scope cache keys so untrusted PRs can't poison a trusted build. Remediation:
-  [the-provenance-blind-model](https://learn.agentpatterns.ai/security/the-provenance-blind-model/).
+  [the-provenance-blind-model](https://learn.agentpatterns.ai/security/the-provenance-blind-model/)
+  (*nearest lesson — teaches the same failure class, a consumer that cannot verify where its input
+  came from; the signing/attestation mechanics are in the SLSA / GitHub attestation docs above*).
 
 ## GHA-10 — Security-masking config / insufficient logging & visibility (CICD-SEC-10)
 - **Flags:** `continue-on-error: true` on a security/test gate (failure silently passes),
-  `ACTIONS_STEP_DEBUG`/verbose logging that can print secrets, over-broad triggers (`on: [push]` with
+  `set -x`/verbose shell tracing in a secret-bearing `run:` step (log masking redacts registered
+  secrets, not values derived or transformed from them), over-broad triggers (`on: [push]` with
   no path/branch scope on a privileged workflow), or no audit-log retention for privileged runs
-  (*audit-log retention is an **org setting** — when only files are available, emit "UNVERIFIED —
-  confirm in org settings", not a finding*).
+  (*`ACTIONS_STEP_DEBUG` — enabled via a repo secret/variable or the re-run UI — and audit-log
+  retention are **repo/org settings**, not workflow YAML: when only files are available, emit
+  "UNVERIFIED — confirm in repo/org settings", not a finding*).
 - **Why:** a masked failure or a blind pipeline removes the chokepoint where a divergence between
   intended and actual action would be caught — the audit/visibility gap
   ([action-audit-divergence-taxonomy](https://agentpatterns.ai/security/action-audit-divergence-taxonomy/);
   OWASP CICD-SEC-10 Insufficient Logging and Visibility).
-- **Fix:** don't mask security gates with `continue-on-error`; keep debug logging off by default and
-  scrub secrets; scope triggers tightly; retain and review audit logs for privileged runs. Remediation:
+- **Fix:** don't mask security gates with `continue-on-error`; keep `set -x`/debug tracing out of
+  secret-bearing steps; scope triggers tightly; retain and review audit logs for privileged runs. Remediation:
   [the-log-is-the-truth](https://learn.agentpatterns.ai/observability/the-log-is-the-truth/).
 
 ---

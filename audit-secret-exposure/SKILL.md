@@ -1,8 +1,8 @@
 ---
 name: audit-secret-exposure
-description: Scan an agent's context surfaces — instruction files, skill files, harness config, tool defs, and credential-bearing files — for credentials that landed where the model can read them — hardcoded keys, secrets pasted into prompts/tool args, agent-readable .env/key files with no mechanical block, long-lived keys on harness/context surfaces where short-lived tokens exist (workflow-file OIDC posture — use audit-github-actions-security), URL query-string leak channels, secrets baked into skill examples, and control logic stored in a system prompt. Invoke when granting or hardening an agent's repo/harness and you need a deterministic literal-secret content scan. Skip when auditing whether private-data + untrusted-input + egress co-occur on one execution path (use audit-lethal-trifecta) or auditing dependency/install sinks (use audit-supply-chain-sinks).
+description: Scan an agent's context surfaces — instruction files, skill files, harness config, tool defs, and credential-bearing files — for credentials that landed where the model can read them — hardcoded keys, secrets pasted into prompts/tool args, agent-readable .env/key files with no mechanical block, long-lived keys on harness/context surfaces where short-lived tokens exist, URL query-string leak channels, secrets baked into skill examples, and control logic stored in a system prompt. Invoke when granting or hardening an agent's repo/harness and you need a deterministic literal-secret content scan. Skip when auditing a workflow file's own secrets/OIDC posture (use audit-github-actions-security), whether private-data + untrusted-input + egress co-occur on one execution path (use audit-lethal-trifecta) or auditing dependency/install sinks (use audit-supply-chain-sinks).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-secret-exposure [path-to-agent-config-or-repo]
 ---
 
@@ -93,8 +93,10 @@ One row per check ID used above — required in every report, not only in the fi
 ```
 Severity: **High** = a live credential literal in an agent-readable surface (SE-1/2/6) or an
 agent-readable credential file with no mechanical block (SE-3). **Medium** = long-lived key where a
-short-lived one exists (SE-4), a URL query-string leak channel (SE-5), or control logic in a system
-prompt (SE-7). **Low** = hardening with no live secret (e.g. add skill-dir scanning pre-emptively).
+short-lived one exists (SE-4), a URL query-string leak channel (SE-5), control logic in a system
+prompt (SE-7), or a secret-via-argument pattern shown with a placeholder (SE-2). **Low** = the
+skill-dir scanning-gap rider attached to an SE-6 literal already found, or an internal-hostname
+recon note (SE-8).
 
 ## Related / pairing
 - Sibling to **`audit-lethal-trifecta`** — it audits security *architecture* (legs co-located on a

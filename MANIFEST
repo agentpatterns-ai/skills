@@ -22,4 +22,5 @@ compress-prompt
 conflicting-instruction-detector
 review-code
 write-skill
+write-tests
 write-tool-description

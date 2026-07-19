@@ -66,9 +66,18 @@ page = evidence) / **Fix** (lesson = remediation). All detection is read-only.
   INSERT on failure); or the completion verifier shares the producer's context/model and has write access.
 - **Why:** "if the same agent runs the tool and writes the row, it can fake exit codes or skip the INSERT
   when a check fails — the ledger only holds when execution and recording are separated (CI, a harness, or a
-  hook)" ([verification-ledger, *When This Backfires*](https://agentpatterns.ai/verification/verification-ledger/)).
-- **Fix:** make the verifier independent of the producer, read-only, default-reject on ambiguity; record via
-  CI / hook, not the producing agent ([the-verification-ledger](https://learn.agentpatterns.ai/verification/the-verification-ledger/)).
+  hook)" ([verification-ledger, *When This Backfires*](https://agentpatterns.ai/verification/verification-ledger/));
+  the verifier half is the corpus's admission-control pattern — a **separate, read-only** verifier as the
+  completion authority: one sharing the producer's model/context "admits the same hallucinations", and
+  write access lets correctness be offloaded onto it ([verify-gated-completion-admission-control](https://agentpatterns.ai/multi-agent/verify-gated-completion-admission-control/)).
+- **Fix:** make the verifier independent of the producer and read-only; record via CI / hook, not the
+  producing agent. Default-reject on ambiguity only once rejection precision is **measured** — promoted
+  without precision evidence, a fail-closed verifier "mostly blocks valid work" (0.39% blocked precision in
+  the cited deployment), so keep the gate advisory until then; demanding default-reject with unmeasured
+  precision is a VG-11 case ([the-verification-ledger](https://learn.agentpatterns.ai/verification/the-verification-ledger/),
+  [verify-gated-completion](https://learn.agentpatterns.ai/multi-agent/verify-gated-completion/)).
+  *(Seam: verifier independence as a property of this completion gate — can "done" be faked? — is VG-5;
+  critic-loop / role-topology coordination mechanics → `audit-multi-agent-orchestration`.)*
 
 ### VG-6 — Verifier weaker than the generator / LLM-judge anchors a mechanical check
 - **Flags:** a checkpoint or gate uses an LLM-as-judge where a deterministic check exists, or the judge is
@@ -131,16 +140,23 @@ page = evidence) / **Fix** (lesson = remediation). All detection is read-only.
 - **Flags:** a finding that demands a heavy gate where its documented floor isn't met — throwaway /
   exploratory / spike work; a stateless or trivial CLI with nothing to restart cleanly; macro-eval
   clustering under ~1,000 traces; an LLM judge under ~70% precision; a ~20-query starter eval set treated as
-  insufficient.
+  insufficient; a fail-closed (default-reject) verifier promoted from advisory before its blocked precision
+  is measured; red-green demanded where tests can't serve as a faithful spec (tautological context-bled
+  tests, unclear / contested requirements).
 - **Why:** every heavy gate has a floor below which it is theater — ledgers don't earn their keep on
   throwaway work, golden journeys produce "ceremony without test signal" on stateless systems, and
   HDBSCAN macro clustering "reports noise or collapses unrelated cases" below ~1,000 traces / below ~70%
-  judge precision; ~20 queries already catch large effect sizes. Over-flagging is itself a false positive
+  judge precision; ~20 queries already catch large effect sizes; a fail-closed verifier promoted without
+  precision evidence "mostly blocks valid work" (0.39% blocked precision in the cited deployment); and
+  where tests can't act as a faithful spec, red-green hides the problem rather than surfacing it — "a
+  prose spec plus code review is often a better fit". Over-flagging is itself a false positive
   ([verification-ledger](https://agentpatterns.ai/verification/verification-ledger/) / [golden-journeys](https://agentpatterns.ai/verification/golden-journeys/) /
-  [staged-evidence-gates](https://agentpatterns.ai/verification/staged-evidence-gates-program-repair/) *When This Backfires*;
+  [red-green-refactor-agents](https://agentpatterns.ai/verification/red-green-refactor-agents/) /
+  [verify-gated-completion-admission-control](https://agentpatterns.ai/multi-agent/verify-gated-completion-admission-control/) *When This Backfires*;
   [macro-evals-agentic-systems, *When This Layer Applies*](https://agentpatterns.ai/verification/macro-evals-agentic-systems/);
   [behavioral-testing-agents, *Three-Part Eval Foundation*](https://agentpatterns.ai/verification/behavioral-testing-agents/)).
 - **Fix:** scope the demand to where the floor is met; for sub-floor cases recommend the lighter control —
-  inline structured output over a SQL ledger, a frequency table over macro clustering, prose spec + review
-  over red-green ([evals-at-scale](https://learn.agentpatterns.ai/verification/evals-at-scale/),
+  inline structured output over a SQL ledger, a frequency table over macro clustering, an advisory verifier
+  until rejection precision is measured, prose spec + review over red-green when the spec is unclear /
+  contested or tests would mirror a draft implementation ([evals-at-scale](https://learn.agentpatterns.ai/verification/evals-at-scale/),
   [testing-what-it-decides](https://learn.agentpatterns.ai/verification/testing-what-it-decides/)).

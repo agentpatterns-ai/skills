@@ -1,8 +1,8 @@
 ---
 name: audit-prompt-hook-placement
-description: Audit the enforcement-medium decision in an agent harness — for each stated rule, does it belong in prose (judgment) or relocated to a deterministic gate (PreToolUse hook / CI / tool-restriction)? — and flag misplaced absolute rules and unsound hooks. Invoke when hardening a harness for where a rule should live, when a recurring error has piled up more prompt prohibitions and you're deciding whether to relocate them to a gate, before trusting a CLAUDE.md prohibition for a must-never-fail constraint, or when adding/reviewing a hook. Skip when judging prose wording/attention/density, or simply diagnosing why a rule in one file isn't followed with no request to relocate it (use audit-instruction-file — it can recommend a hook and hand off here), the private-data/untrusted-input/egress exfiltration model (use audit-lethal-trifecta), or auditing whether an existing completion gate is soundly anchored to external state (use audit-verification-gates).
+description: Audit the enforcement-medium decision in an agent harness — does each stated rule belong in prose (judgment) or a deterministic gate (PreToolUse hook / CI / tool-restriction)? — and flag misplaced absolute rules and unsound hooks. Invoke when deciding where a rule should live — completion rules included (e.g. whether a tests-must-pass-before-finishing prose rule ought to become a Stop hook), when piled-up prompt prohibitions need relocating to a gate, before trusting a CLAUDE.md prohibition for a must-never-fail constraint, or when adding/reviewing a hook. Skip when judging prose wording/attention/density, or diagnosing why a rule isn't followed with no request to relocate it (use audit-instruction-file), bounding the blast radius of a granted action — sandbox scope, deny floors, reversibility (use audit-harness-safety), the private-data/untrusted-input/egress exfiltration model (use audit-lethal-trifecta), or auditing whether an existing completion gate's anchoring is sound (use audit-verification-gates).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-prompt-hook-placement [path-to-harness-or-instruction-file]
 ---
 
@@ -17,7 +17,8 @@ that asks "is this prose good?"; this asks "should it be prose **at all**?"
 - **Costliest miss: a must-never-fail rule living as prose is not enforcement.** Prompts request,
   hooks require; a hook runs outside the context window — the model can't forget or argue with it
   ([hooks-vs-prompts, Core Distinction](https://agentpatterns.ai/instructions/hooks-vs-prompts/)).
-  Relocate the binary subset to a `PreToolUse` hook (exit 2 blocks).
+  Relocate the binary subset to a `PreToolUse` hook (exit 2 blocks — but see HP-6 for its
+  `Write`/`Edit` coverage gap).
 - **Decision rule (per rule).** Hook **only** when all three hold: non-negotiable, binary,
   opposed-by-prior — and expressible at the tool-call boundary. Miss any one → stays prose
   ([hooks-vs-prompts, Decision Rule](https://agentpatterns.ai/instructions/hooks-vs-prompts/)).
@@ -54,9 +55,9 @@ source-code vulnerabilities → `review-code`.
    All three + tool-call-expressible → *misplaced prose*; recommend a hook. Otherwise stays prose.
    Run the detectors in [`checks.md`](checks.md).
    Done when every prose rule has a recorded three-property verdict.
-3. **Scan for pile-up signals** (HP-1): >5 negation rules and `IMPORTANT:` >1× (deterministic,
-   countable), plus the same error class recurring across prompt edits (needs history evidence) —
-   the symptom that a binary subset needs to move structurally.
+3. **Scan for pile-up signals** (HP-1): >5 negation rules or `IMPORTANT:` >1× (deterministic,
+   countable), or the same error class recurring across prompt edits (needs history evidence) —
+   any one is the symptom that a binary subset needs to move structurally.
    Done when both pile-up counts and a history-evidence record (recurrence found / no history available) exist.
 4. **Audit each existing hook for soundness** — fail-open exit code (HP-6), substitution gaps (HP-5),
    source trust (HP-7), over-blocking of judgment (HP-4).
@@ -96,8 +97,8 @@ substitution-gap, fail-open, hook-source-trust, fade/compaction, ceiling-relocat
 ```
 Severity: **High** = must-never-fail rule as prose, a fail-open / source-untrusted hook, **or a
 security-critical rule behind a substitution-incomplete hook** (an unhooked `/bin/rm`/MCP/sub-agent
-path is materially prose-only exposure); **Medium** = pile-up / fade / non-security substitution gap;
-**Low** = ceiling-relocation tidy-up.
+path is materially prose-only exposure); **Medium** = pile-up / fade / over-blocked judgment rule
+(HP-4) / non-security substitution gap; **Low** = ceiling-relocation tidy-up.
 
 ## Related / pairing
 - Reciprocal sibling to **`audit-instruction-file`** — it audits prose *quality*; this audits the
@@ -113,5 +114,7 @@ path is materially prose-only exposure); **Medium** = pile-up / fade / non-secur
 ## Critical rules (read last)
 - A must-never-fail rule as **prose is not enforcement** — relocate it to a hook the model can't overrule.
 - Hook **only** when non-negotiable + binary + opposed-by-prior; forcing a *judgment* rule binary regresses it.
-- A block hook must **exit 2** (not 1) or it fails open silently; cover every substitution path or pair with CI.
+- A block hook must **exit 2** (never 1) or it fails open silently — and where exit-2 coverage is
+  gapped (`Write`/`Edit`), prefer JSON stdout with an explicit decision field (HP-6); cover every
+  substitution path or pair with CI.
 - Read-only — recommend; apply nothing without confirmation.

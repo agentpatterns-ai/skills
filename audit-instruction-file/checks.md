@@ -56,13 +56,17 @@ self-contained: an ID, what it **Flags**, **Why** (with a source), and the **Fix
   Remediation: [learn — top-and-tail](https://learn.agentpatterns.ai/prompt-engineering/top-and-tail/).
 
 ## CE-3 — Oversized file / large dead middle
-- **Flags:** an always-loaded file that is long (rough trigger: root instruction file > ~50
-  lines, or growing unbounded). The longer the file, the larger its low-attention middle.
+- **Flags:** an always-loaded file that is long for its job — a large low-attention middle (e.g.
+  topic- or path-scoped bulk loaded on every turn regardless of task) — or growing unbounded.
+  There is no sourced fixed line quota: judge from step 2's **measurements** — the file's token
+  count, its share of the assembled always-loaded load, and the size of its dead middle — not a
+  bare line count. The longer the file, the larger its low-attention middle.
 - **Why:** output quality degrades as context fills — "context rot," a gradient not a cliff,
-  with onset nearer an absolute token threshold than a fixed % (Anthropic, *Effective Context
+  with onset nearer an absolute token threshold (roughly 32K–100K *assembled* tokens, varying by
+  task type — reasoning-heavy tasks degrade earliest) than a fixed % (Anthropic, *Effective Context
   Engineering*; RULER, arXiv:2404.06654;
   [corpus — context-window-dumb-zone](https://agentpatterns.ai/context-engineering/context-window-dumb-zone/)).
-  Every line displaces reasoning and buries its neighbours.
+  Every always-loaded line spends that budget before any task token and buries its neighbours.
 - **Fix:** move path/topic-scoped guidance into files that load **on demand** (e.g. nested
   per-directory files, path-scoped rule files, or linked references) so the always-loaded core
   stays small. Cut any line whose removal would not change agent behavior.
@@ -165,9 +169,12 @@ self-contained: an ID, what it **Flags**, **Why** (with a source), and the **Fix
   **volatile, per-session content** — timestamps / dates ("as of <date>", "last updated …"),
   absolute machine paths, `cwd`, hostnames, usernames, session/run IDs, env-specific values, or
   any "current state" that changes between runs or machines.
-- **Why:** prompt caching reuses an exact byte-identical prefix at ~10% of base price; any volatile
-  token in the prefix forces a **cache write (125–200%) every turn**, silently — a miss never errors,
-  it just bills. Volatile-in-prefix also loses on attention: it's noise that dilutes the real rules.
+- **Why:** prompt caching reuses an exact byte-identical prefix; any volatile token busts it, so
+  the whole prefix re-bills at full price **every turn**, silently — a miss never errors, it just
+  bills. The economics are provider-specific: on Anthropic-priced caching, reads are ~10% of base
+  and a busted prefix incurs a cache **write** (125–200%); on other providers it forfeits the
+  cached-input discount rather than surcharging. Either way volatile-in-prefix pays full price —
+  and loses on attention too: it's noise that dilutes the real rules.
   (Static prose that merely *describes* a path is fine — flag values that actually change per run.)
   ([corpus — static-content-first-caching](https://agentpatterns.ai/context-engineering/static-content-first-caching/))
 - **Fix:** move volatile/state content to the dynamic tail or compute it at runtime; keep the
@@ -211,8 +218,9 @@ self-contained: an ID, what it **Flags**, **Why** (with a source), and the **Fix
   degradation; past the ceiling low-priority rules are silently dropped.
 - **`@`-imports assemble verbatim** — the U-curve and the rule load apply to the *concatenated*
   whole, so import arrangement is itself an attention-positioning decision.
-- **Always-loaded files are the cached prefix** — static, byte-stable content caches at ~10% of
-  base; volatile content in the prefix forces a full-price cache write every turn, silently.
+- **Always-loaded files are the cached prefix** — static, byte-stable content is what the
+  provider's cache discount applies to; volatile content in the prefix busts the cache and pays
+  full price every turn, silently (the exact economics are provider-specific — see CE-9).
 - **Compress to crisp, not merely short** — density raises compliance, but violations peak at
   *medium* compression and stripping meaning shifts cost to reasoning; compress decisively or stay verbose.
 - **Attention-edge placement and static-first caching are compatible, not opposed** — a static

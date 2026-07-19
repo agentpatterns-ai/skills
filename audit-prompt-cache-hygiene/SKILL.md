@@ -1,8 +1,8 @@
 ---
 name: audit-prompt-cache-hygiene
-description: Audit an agent harness — prompt-assembly code, tool-definition serialization, and SDK/CLI cache config — for prompt-cache hygiene — volatile content in the static prefix, non-deterministic or mutated tool enumeration, mid-session model/effort/MCP switches, missing cache-usage monitoring, TTL/idle-shape misfit, cache-busting compaction, and cache-economics misfit. Invoke when reviewing an agent loop / SDK integration / harness that assembles a repeated prompt prefix and calls a hosted model across many turns, to find cache-busting cost regressions. Skip when auditing a prose instruction file's content/attention (use audit-instruction-file), or a single-turn / cold-start / local-no-KV-reuse flow with no prefix to protect.
+description: Audit an agent harness — prompt-assembly code, tool-definition serialization, and SDK/CLI cache config — for prompt-cache hygiene — volatile content in the static prefix, non-deterministic or mutated tool enumeration, mid-session model/effort/MCP switches, missing cache-usage monitoring, TTL/idle-shape misfit, cache-busting compaction, and cache-economics misfit. Invoke when reviewing an agent loop / SDK integration / harness that assembles a repeated prompt prefix and calls a hosted model across many turns, to find cache-busting cost regressions. Skip when auditing a prose instruction file's content/attention (use audit-instruction-file), general run-legibility/telemetry wiring — OTel exporters, traces, loop bounds — rather than the cache-hit meter (use audit-observability-setup), or a single-turn / cold-start / local-no-KV-reuse flow with no prefix to protect.
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-prompt-cache-hygiene [path-to-harness-or-sdk-integration]
 ---
 
@@ -25,7 +25,9 @@ comment telling it to "keep the prefix stable."
   defs by name, fix model/effort/MCP at session start, set `excludeDynamicSections` across a fleet.
   A natural-language "don't mutate the prefix" rule enforces nothing.
 - **Guard the economics first.** Flagging cache discipline where it loses money (sub-minimum prefix,
-  ≤2-turn / 5–10-call sessions, mostly-dynamic prefix) is a false positive — see PC-9.
+  ≤2-turn / 5–10-call sessions, mostly-dynamic prefix, Google explicit caching hit less than several
+  times per hour) is a false positive — and an unsequenced parallel fan-out pays the write premium
+  once per sibling — see PC-9.
 
 ## Input
 - `path` (optional): a harness dir / SDK integration / agent loop. Default: scan prompt-assembly code
@@ -81,13 +83,17 @@ there in the table — never left as a bare check ID or promised for the filed i
 | High | PC-1 volatile prefix | `f"...{datetime.now()}"` in system | every call | move timestamp to dynamic tail | checks.md → PC-1 lesson URL |
 | Med | PC-7 no monitoring | no `usage` inspection | (silent) | log `cache_read` vs `cache_creation` (or provider equivalent) per session | checks.md → PC-7 lesson URL |
 
-**Healthy baseline:** near-zero `cache_creation_input_tokens` after turn 1; a mid-session creation
-spike = a prefix change.
+**Healthy baseline:** prefix-only breakpointing — near-zero `cache_creation_input_tokens` after
+turn 1; incremental conversation caching (breakpoint moved to the latest message each turn) —
+creation tracks the per-turn delta. The signal is magnitude, not presence: a creation spike
+approaching full prefix size = a prefix change.
 **Smallest high-impact change:** <the one prefix mutation to remove first.>
 ```
 Severity: **High** = prefix bust every call (full re-pay); **Medium** = per-event bust — per-switch /
 per-machine / per-compaction (**PC-11**, the highest-cost single bust, at the moment the session is
-longest) — or a silent monitoring gap; **Low** = economics/TTL tuning (PC-10) or least-cost cleanup.
+longest) — or a silent monitoring gap; **Low** = economics guard outcomes (PC-9), one-off TTL
+tuning, or least-cost cleanup. Key severity to bust shape, not check ID: a PC-10 misfit that
+re-pays the write premium on every resume is Medium like any other per-event bust.
 
 ## Related
 - Sibling to **`audit-instruction-file`** — same family, different target: it audits instruction

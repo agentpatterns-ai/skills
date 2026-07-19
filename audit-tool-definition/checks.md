@@ -6,7 +6,7 @@ detection is read-only — flag and recommend, never rewrite (that is `write-too
 
 ## Contents
 - [Core ergonomics (TD-1…TD-4, TD-6, TD-8…TD-10)](#core-ergonomics-first-class)
-- [Tail — load on demand / advisory (TD-5, TD-7, TD-11, TD-12)](#tail-load-on-demand--advisory)
+- [Tail — lower-priority / advisory, still verdicted (TD-5, TD-7, TD-11, TD-12)](#tail-lower-priority--advisory--still-verdicted)
 
 ---
 
@@ -39,12 +39,14 @@ detection is read-only — flag and recommend, never rewrite (that is `write-too
 ### TD-4 — No poka-yoke on the schema
 - **Flags:** free text where an enum belongs; unbounded params (no min/max/default); relative file
   paths; no read-before-write / prerequisite gate; a format requiring line-counting or escaping; **no
-  concrete sample call** in the definition.
+  concrete sample call** on a tool with complex parameters — nested shapes, strict ID/query formats,
+  multiple constrained values. The cited accuracy lift is scoped to complex parameter handling; don't
+  flag a trivial signature (a sample call spends definition tokens every turn — TD-6's budget).
 - **Why:** structurally wrong usage should fail at the interface — mandatory absolute paths killed a
   whole failure class, and a sample call lifted complex-parameter accuracy 72% → 90%
   ([poka-yoke-agent-tools §Absolute Paths, §Tool Use Examples in Definitions](https://agentpatterns.ai/tool-engineering/poka-yoke-agent-tools/)).
 - **Fix:** enum the fixed-value params; add bounds+defaults; require absolute paths; add a sample call
-  — see `schema-and-description-altitude` and `idempotent-tools`.
+  where parameters are complex — see `schema-and-description-altitude` and `idempotent-tools`.
   Remediation: [learn — schema-and-description-altitude](https://learn.agentpatterns.ai/tool-engineering/schema-and-description-altitude/).
 
 ### TD-6 — Oversized / full-passthrough output + opaque identifiers
@@ -71,22 +73,17 @@ detection is read-only — flag and recommend, never rewrite (that is `write-too
 
 ### TD-9 — MCP annotation misdeclaration
 - **Flags:** `readOnlyHint:true` on a tool whose implementation mutates anything (even a `last_seen`
-  write); a pure read missing `readOnlyHint:true`. *Advisory (not a violation):* a pure read missing
-  the rest of the read-only triple (`idempotentHint:true`, `destructiveHint:false`) — the MCP spec
-  makes those two hints meaningful only when `readOnlyHint==false`
-  ([MCP spec — schema, *ToolAnnotations*](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations) —
-  the spec version advances; reconfirm the cited section against the current spec if this detector's
-  behavior looks stale),
-  so a bare `readOnlyHint:true` is
-  spec-conformant; still recommend the full triple (harness recovery paths read it anyway).
+  write); any other **present** annotation (`idempotentHint`, `destructiveHint`, `openWorldHint`) the
+  implementation contradicts. *Not flagged here:* whether a pure read carries `readOnlyHint:true` (or
+  the rest of the annotation set) at all — annotation **presence/defaults** are declaration-level and
+  belong to `audit-mcp-server` MS-5, exactly as this skill's frontmatter Skip routes them.
 - **Why:** annotations are load-bearing once a harness wires `readOnlyHint` into parallel dispatch — a
   misannotated mutating tool races ([read-only-hint-concurrency §The Contract Shift](https://agentpatterns.ai/tool-engineering/read-only-hint-concurrency/)).
-- **Fix:** verify the hint against the implementation; annotate pure reads fully — see
-  `annotations-and-concurrency`. *Disposition:* when the input is a `tools/list` payload / `.mcp.json`
-  with **no implementation visible** (third-party vetting), report the annotation as
-  "UNVERIFIED against implementation" — not pass/fail; the missing read-only triple on a
-  self-described pure read stays definition-visible and verdictable. *Seam:* TD-9 verifies annotation
-  **truth against the implementation**; declaration-level presence/defaults across a server is
+- **Fix:** verify each present hint against the implementation — see `annotations-and-concurrency`.
+  *Disposition:* when the input is a `tools/list` payload / `.mcp.json`
+  with **no implementation visible** (third-party vetting), report each present annotation as
+  "UNVERIFIED against implementation" — not pass/fail. *Seam:* TD-9 verifies annotation
+  **truth against the implementation**; annotation presence/defaults is
   `audit-mcp-server` MS-5.
   Remediation: [learn — annotations-and-concurrency](https://learn.agentpatterns.ai/tool-engineering/annotations-and-concurrency/).
 
@@ -104,7 +101,11 @@ detection is read-only — flag and recommend, never rewrite (that is `write-too
 
 ---
 
-## Tail (load on demand / advisory)
+## Tail (lower-priority / advisory — still verdicted)
+
+A priority tier, not a load split — this is one bundled file, so all 12 detectors load together, and
+Procedure step 2 requires a recorded verdict for every tool × check pair, tail included. TD-12 in
+particular is always run (security flag-and-route per the Critical rules).
 
 ### TD-5 — Wrong altitude / over-prescribed call sequence
 - **Flags:** a call sequence baked into the description ("*always* call `list_sprints` first"), making

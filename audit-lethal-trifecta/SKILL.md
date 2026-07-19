@@ -1,8 +1,8 @@
 ---
 name: audit-lethal-trifecta
-description: Audit an agent / sub-agent / MCP setup for the lethal trifecta — private-data access + untrusted-content exposure + external egress on one execution path — and flag the prompt-injection and exfiltration routes it opens. Invoke when reviewing or hardening an agent harness's security architecture (sub-agent tool allowlists, MCP servers, permissions, sandbox/egress config) or before deciding if granting an agent new tools, data, or web/network access is safe (e.g. a RAG/vector-store agent gaining web access). Skip when the ask is literal secrets in context (use audit-secret-exposure), LLM-output sinks or agent-run installs (use audit-supply-chain-sinks), blast-radius/reversibility containment (use audit-harness-safety), retrieval-boundary authorization with no egress leg (use audit-memory-retrieval-integrity), instruction-file content/attention (use audit-instruction-file), or reviewing application source code for vulnerabilities (use review-code).
+description: Audit an agent / sub-agent / MCP setup for the lethal trifecta — private-data access + untrusted-content exposure + external egress on one execution path — and flag the injection and exfiltration routes it opens. Invoke when reviewing or hardening an agent harness's security architecture (tool allowlists, MCP servers, sandbox/egress) or before deciding if granting new tools, data, or an outbound channel (web access, send-email, git push) is safe — e.g. a RAG agent gaining web access. Skip when the ask is literal secrets in context (use audit-secret-exposure), validating an LLM-emitted string or lone install at the sink, no private data co-held (use audit-supply-chain-sinks), blast-radius/reversibility containment (use audit-harness-safety), a memory/retrieval boundary where web/email is only stored-content provenance, not a live outbound grant (use audit-memory-retrieval-integrity), instruction-file content/attention (use audit-instruction-file), or application source-code vulnerabilities (use review-code).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-lethal-trifecta [path-to-agent-config-or-repo]
 ---
 
@@ -31,13 +31,18 @@ architectural — **remove at least one leg from every path** — not a prompt a
 
 ## Scope
 Audits the **setup / architecture**: per-path data reach, tool allowlists, MCP servers, permission
-modes, sandbox / egress controls. **Out of scope:** application source-code vulnerabilities (general
-security review), instruction-prose attention / density (`audit-instruction-file`), live runtime
-monitoring (static config audit).
+modes, sandbox / egress controls. An install route that **completes a trifecta** (untrusted package
+names + install authority + private data) stays here (LT-A1). **Out of scope:** validating a single
+LLM-emitted string or install at the sink with no private-data co-holding (`audit-supply-chain-sinks`),
+application source-code vulnerabilities (general security review), instruction-prose attention /
+density (`audit-instruction-file`), live runtime monitoring (static config audit).
 
 ## Procedure
 1. **Enumerate paths.** Each agent/sub-agent is a path; record its tool allowlist, data reach, and
-   egress surfaces. Sub-agents inherit nothing unless granted — audit each separately.
+   egress surfaces. Record each sub-agent's **effective** toolset under its harness's inheritance
+   rule — in Claude Code an omitted `tools` field inherits every main-thread tool, MCP included
+   ([Claude Code sub-agents docs](https://code.claude.com/docs/en/sub-agents)) — never infer
+   isolation from an absent grant; audit each separately.
    Done when every agent/sub-agent has a recorded path row — no blanks.
 2. **Classify the three legs per path** via detectors in [`checks.md`](checks.md): private data?
    untrusted input? egress? Mark **partial-leg** states (read-only egress, tokenized data) — do not
@@ -53,8 +58,10 @@ monitoring (static config audit).
    not just imply the deterministic fix is better.
    Done when every flagged path names the leg to remove, the target the risk migrates to, and any
    existing prose-only guardrail for that risk is named as non-enforcing.
-5. **Report** with the template below.
-   Done when the paths table, Findings, Safe paths, and Smallest high-impact change are filled.
+5. **Report** with the template below, then end by **offering** the backlog filing (Findings →
+   backlog, below).
+   Done when the paths table, Findings (each row with its resolved Fix → lesson URL), Safe paths,
+   and Smallest high-impact change are filled, and the backlog offer has been made.
 
 ## Detectors & attack routes
 Per-leg detectors + injection/exfiltration route checks (poisoned dependency, cross-agent config
@@ -64,6 +71,10 @@ complete **across sessions** — write attacker-influenced content to a persiste
 back as trusted instruction later; a per-session pass misses it (LT-A4).
 
 ## Output template
+The `checks.md → <ID>` notation below is a **placeholder showing where the citation goes** — a real
+run resolves it to the actual `https://learn.agentpatterns.ai/…` URL from `checks.md`; never print
+the placeholder text itself as the citation. **Every findings row carries its link**, including one
+whose recommendation is "no fix needed" — the column cites the check's lesson, not the fix.
 ```
 # Lethal-trifecta audit — <target>
 
@@ -102,3 +113,6 @@ Severity: **High** = path with all three legs (or a config-write route that can 
 - Audit **per execution path**; aggregate-safe agents hide single unsafe paths.
 - Recommend **deterministic** controls (sandbox / allowlist / deny rule); read-only — apply nothing
   without confirmation.
+- **The report, not just the template:** every findings row prints its resolved
+  `learn.agentpatterns.ai` lesson URL (from `checks.md`, by check ID), and the run ends with the
+  backlog offer — a bare check ID or a `checks.md → LT-x` deferral is an incomplete report.

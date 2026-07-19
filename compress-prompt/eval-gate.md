@@ -11,7 +11,7 @@ The go/no-go is the **eval result**, never the token delta.
 | Target | Has a suite? | Action |
 |---|---|---|
 | Skill / instruction artifact | Yes — a behavioral suite exists | Eval-gate it (below). |
-| Skill / instruction artifact | No suite yet | **Recommend one and offer to scaffold it** in the target's own eval convention *before* compressing. Don't silently compress un-evalled behavior. |
+| Skill / instruction artifact | No suite yet | **Scaffold one** in the target's own eval convention *before* compressing (then gate on it), **or defer the compression**. Proceed ungated only on an explicit user override — record the override. Don't silently compress un-evalled behavior. |
 | One-off prompt / task text | No behavior to regress | Out of scope — compress and report a token delta as normal. |
 
 Use the target repo's **existing** eval convention — do not invent a parallel format.
@@ -36,12 +36,16 @@ Record the gate alongside the token delta (see the SKILL.md report template):
 Eval suite: <S> evals — PRE <S>/<S> green → POST <S>/<S> green   ← gate; held on any regression
 ```
 
-If no suite existed: report that, and whether one was scaffolded or the compression was deferred.
+If no suite existed: report that, and whether one was scaffolded, the compression was deferred, or
+the user explicitly overrode the gate (the override must appear in the report).
 
 ## Why it lives in the loop, not at release
 
 Release pipelines usually gate on evals — but at *release* time, after many edits. This gate is
 **per-compression and in-loop**: it runs before anything is committed, so a behavioral regression is
 caught at the exact compression that caused it, while the suspected dropped rule is still obvious.
-(Measured in practice: a full-library compression pass whose structural gates were all green still
-required the behavioral suite to prove no detector was weakened — that proof belongs in the loop.)
+Skills and instruction files are edited far more often than the harness around them, and only a
+behavioral eval gives an objective signal that they still work after an edit — structural gates
+can all stay green while a rule is silently weakened
+([skill-evals](https://agentpatterns.ai/verification/skill-evals/); Remediation:
+[learn — evals-at-scale](https://learn.agentpatterns.ai/verification/evals-at-scale/)).

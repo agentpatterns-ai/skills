@@ -1,8 +1,8 @@
 ---
 name: audit-memory-retrieval-integrity
-description: Audit a retrieval or memory layer — RAG config, vector-store queries, agent memory stores, knowledge-graph tool-use — for the retrieval-boundary authorization-and-integrity gap — cross-tenant chunk bleed, agent-supplied tenant identity, untokenized PII in retrieved context, and retrieved/remembered content trusted as fact-or-instruction with no provenance tier. Invoke when reviewing a RAG / vector-store / agent-memory pipeline's own retrieval-boundary scoping (no egress/web access named), a multi-tenant retrieval path, or before wiring retrieved chunks into model context. Skip when egress/web access is also named alongside the retrieval (use audit-lethal-trifecta), credential/secret hygiene (use audit-secret-exposure), or validating an LLM's output before it reaches a sink (use audit-supply-chain-sinks).
+description: Audit a retrieval or memory layer — RAG config, vector-store queries, agent memory stores — for its authorization-and-integrity gap — cross-tenant chunk bleed, agent-supplied tenant identity, untokenized PII, and retrieved/remembered content trusted as fact-or-instruction with no provenance tier. Invoke when reviewing a RAG / vector-store / agent-memory pipeline's retrieval boundary — including when web/email is only stored-content provenance (pages an ingestion job fetched, emails it read) and the memory-reading agent holds no live outbound tool — a multi-tenant retrieval path, or wiring retrieved chunks into model context. Skip when the agent under review holds or gains a live outbound channel (web access, send-email, curl, git push) alongside that data (use audit-lethal-trifecta), secret hygiene (use audit-secret-exposure), validating an LLM's output at a sink (use audit-supply-chain-sinks), or the standing protocol for whether the agent may persist learnings at all (use audit-self-improvement-protocol).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-memory-retrieval-integrity [path-to-retrieval-or-memory-code]
 ---
 
@@ -17,7 +17,10 @@ retrieval leaked cross-tenant data in 98–100% of probes
 The agent trusts tool-delivered facts as ground truth, so a poisoned chunk or KG node steers it on the
 *data* path, not the instruction path
 ([oracle-poisoning-knowledge-graph](https://agentpatterns.ai/security/oracle-poisoning-knowledge-graph/)).
-Fix at the boundary — gate the search space and tier provenance — not a prompt asking the model to behave.
+Fix at the boundary — gate the search space and tier provenance; authorization and PII are deterministic
+code, not a prompt asking the model to behave. Scoped exception: against poisoning (MR-I1),
+generation-stage defensive prompting is a corpus-backed layer *on top of* provenance tiering — never a
+substitute for it ([rag-poisoning](https://agentpatterns.ai/security/rag-architecture-poisoning-robustness/)).
 
 **Stance — detect and recommend; read-only; apply nothing without confirmation.**
 - **Audit per retrieval call site, not per app.** One unfiltered `search()` is the leak even when the
@@ -49,16 +52,18 @@ with no shared index, or a public corpus with no access tiers — nothing to lea
    Done when every call site has a recorded boundary row — no blanks.
 2. **Run the detectors** in [`checks.md`](checks.md): the **authorization** family (MR-A1…A5 — tenant
    scoping, two-tier filter, identity source, state scope, PII) and the **integrity** family (MR-I1…I3 —
-   RAG / oracle / memory poisoning). Mark **partial** states (post-only filter, regex-only PII) — do not
-   zero an ambiguous control to "No".
-   Done when every boundary × MR check is marked present/partial/absent.
+   RAG / oracle / memory poisoning). Record each mark in the boundary row's **MR marks** column —
+   ✓ present / ◐ partial / ✗ absent / – not applicable. Mark **partial** states (post-only filter,
+   regex-only PII) as ◐ — do not zero an ambiguous control to ✗.
+   Done when every boundary row's MR-marks column carries a mark for all eight checks.
 3. **Flag each gap** with severity (below) and the cited why. Raise a detector only when the target
    artifact shows its flag condition directly — no ingest path, no untrusted writer, no PII field means
    that detector does not fire, even hedged as "partial" or "for verification". A plausible-but-unconfirmed
    concern (e.g. corpus writability unknown, PII schema unclear) is an open question named in prose, never
-   a scored Findings-table row. A call site that meets the detector's own PASS bar (e.g. a pre-filter
-   bound server-side to the principal, not just a post-filter) is **clean** — credit it in prose, never
-   score a Findings row against it to look thorough; per-call-site auditing means judging each site on
+   a scored Findings-table row. A call site that meets the detector's own PASS bar (e.g. a two-tier
+   filter — pre-filter composed into the search call **plus** post-ACL — bound server-side to the
+   principal) is **clean** — credit it in prose, never score a Findings row against it to look
+   thorough; per-call-site auditing means judging each site on
    its own evidence, not projecting one site's defense-in-depth wishlist onto a different, correctly-built
    site.
    Done when every flagged gap has both a severity and a citation recorded, and no Findings row lacks
@@ -75,20 +80,23 @@ Eight per-boundary detectors (ID / Flags / Why+source / Fix) in [`checks.md`](ch
 auditing.
 
 ## Output template
+The `checks.md → <ID>` notation below is a **placeholder showing where the citation goes** — a real
+run resolves it to the actual `https://learn.agentpatterns.ai/…` URL from `checks.md`; never print
+the placeholder text itself as the citation.
 ```
 # Memory & retrieval integrity audit — <target>
 
 ## Boundaries
-| Call site | Index/store | Identity source | Tenant filter | PII | Provenance tier | Verdict |
-|---|---|---|---|:--:|:--:|:--:|
-| search_docs()      | shared Qdrant | LLM arg     | post-only | raw | none | LEAK |
-| memory.read()      | per-user kv   | session JWT | n/a       | tok | tagged | safe |
+| Call site | Index/store | Identity source | Tenant filter | PII | Provenance tier | MR marks (✓/◐/✗/–) | Verdict |
+|---|---|---|---|:--:|:--:|---|:--:|
+| search_docs()      | shared Qdrant | LLM arg     | post-only | raw | none | A1✗ A2◐ A3✗ A4✓ A5✗ I1✗ I2– I3– | LEAK |
+| memory.read()      | per-user kv   | session JWT | n/a       | tok | tagged | A1– A2– A3✓ A4✓ A5✓ I1✓ I2– I3✓ | safe |
 
 ## Findings
-| Severity | Boundary | Detector | Cited why | Deterministic fix |
-|---|---|---|---|---|
-| High | search_docs() | MR-A1 | unscoped retrieval, multi-tenant surface | pre-filter `tenant_id` into the search call + post-ACL |
-| High | search_docs() | MR-A3 | tenant_id from LLM args | bind from session principal / signed JWT claim |
+| Severity | Boundary | Detector | Cited why | Deterministic fix | Fix → lesson |
+|---|---|---|---|---|---|
+| High | search_docs() | MR-A1 | unscoped retrieval, multi-tenant surface | pre-filter `tenant_id` into the search call + post-ACL | checks.md → MR-A1 |
+| High | search_docs() | MR-A3 | tenant_id from LLM args | bind from session principal / signed JWT claim | checks.md → MR-A3 |
 
 **Safe boundaries:** <which, and which control keeps them safe.>
 **Smallest high-impact change:** <the one boundary control to add first.>
@@ -102,13 +110,14 @@ multi-tenant surface), untokenized PII reaching context, or writable oracle/memo
 Sibling to **`audit-lethal-trifecta`** (input-side three-leg data-flow of an execution *path*); this
 owns the retrieval-boundary authorization+integrity surface — same family, different target. Other
 siblings: `audit-secret-exposure` (credential hygiene), `audit-supply-chain-sinks` (LLM output → sink).
-Corpus (per-check Why detail lives in [`checks.md`](checks.md)): [gap](https://agentpatterns.ai/security/multitenant-rag-authorization-gap/), [isolation-knobs](https://agentpatterns.ai/security/multi-tenant-isolation-knobs-agent-sdk/), [pii-tokenization](https://agentpatterns.ai/security/pii-tokenization-in-agent-context/), [oracle-poisoning](https://agentpatterns.ai/security/oracle-poisoning-knowledge-graph/), [rag-poisoning](https://agentpatterns.ai/security/rag-architecture-poisoning-robustness/).
+Corpus (per-check Why detail lives in [`checks.md`](checks.md)): [gap](https://agentpatterns.ai/security/multitenant-rag-authorization-gap/), [isolation-knobs](https://agentpatterns.ai/security/multi-tenant-isolation-knobs-agent-sdk/), [pii-tokenization](https://agentpatterns.ai/security/pii-tokenization-in-agent-context/), [oracle-poisoning](https://agentpatterns.ai/security/oracle-poisoning-knowledge-graph/), [rag-poisoning](https://agentpatterns.ai/security/rag-architecture-poisoning-robustness/), [trojan-hippo](https://agentpatterns.ai/security/trojan-hippo-memory-attack/).
 
 **Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
 
 ## Critical rules (read last)
 - Compose authorization **into the search call** (pre-filter + post-ACL); post-only filtering is the leak.
 - The agent **never** supplies the tenant id — bind it from a server-side principal.
-- Tokenize PII and tier provenance with **deterministic code at the boundary** — a prompt is not a fix.
+- Tokenize PII and tier provenance with **deterministic code at the boundary** — a prompt is not a fix
+  there (MR-I1's generation-stage defensive prompting layers on top of the tier, never replaces it).
 - Audit **per call site**; aggregate-tenant-aware pipelines hide a single unfiltered retrieval. Read-only;
   apply nothing without confirmation.

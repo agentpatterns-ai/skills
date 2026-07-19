@@ -89,9 +89,11 @@ session too short/sparse to amortize the 2× write premium).
   regression (the 12× SDK bug) is invisible without the meter ([caching discipline → Monitoring Cache
   Health; SDK Cache Invalidation](https://agentpatterns.ai/context-engineering/prompt-caching-architectural-discipline/)).
 - **Fix:** log cache-hit share per session using the provider's fields. Healthy baselines:
-  Anthropic — near-zero `cache_creation_input_tokens` after turn 1 (alert on a mid-session creation
-  spike); OpenAI — `usage.prompt_tokens_details.cached_tokens` non-zero on turns 2+; Google —
-  explicit-caching hit metadata present. Remediation: [learn — caching-static-first](https://learn.agentpatterns.ai/context-engineering/caching-static-first/).
+  Anthropic, prefix-only breakpointing — near-zero `cache_creation_input_tokens` after turn 1;
+  Anthropic, incremental conversation caching (breakpoint moved to the latest message each turn) —
+  creation tracks the per-turn delta, so alert when a mid-session creation spike approaches full
+  prefix size, not on merely nonzero creation; OpenAI — `usage.prompt_tokens_details.cached_tokens`
+  non-zero on turns 2+; Google — explicit-caching hit metadata present. Remediation: [learn — caching-static-first](https://learn.agentpatterns.ai/context-engineering/caching-static-first/).
 
 ### PC-8 — Per-machine context in the system prompt across a fleet
 - **Flags:** `cwd` / OS / shell / memory paths inlined in the system prompt while the same harness
@@ -104,23 +106,34 @@ session too short/sparse to amortize the 2× write premium).
   (CLI) so identical configs share one cache entry; keep per-machine context in the dynamic tail. Remediation: [learn — the-production-stack](https://learn.agentpatterns.ai/prompt-engineering/the-production-stack/).
 
 ### PC-9 — Cache-economics misfit *(false-positive guard — do NOT flag missing discipline here)*
-- **Scope:** the write-premium *economics* are Anthropic explicit caching; automatic-cache
+- **Scope:** the write-premium *economics* are Anthropic explicit caching. Automatic-cache
   providers (OpenAI prompt caching — no write premium) have no caching investment to skip —
-  suppress there; local no-KV-reuse backends stay in scope via the flag below.
+  suppress there. **Google explicit caching is neither Anthropic nor automatic** — no write premium
+  but an hourly storage fee, so it stays in scope via the storage-fee flag below; local no-KV-reuse
+  backends stay in scope via the flag below.
 - **Flags (suppress a finding when present):** prefix below the per-model cache minimum; ≤2-turn or
   short 5–10-call sessions paying the write premium without amortizing reads; a mostly-dynamic prefix
-  that stabilizes for only a few turns; local backend with no cross-request KV reuse.
-- **Why:** caching can lose money — the 25–100% write premium is paid repeatedly without enough reads
-  to amortize it; for short sessions the optimization isn't worth it ([caching discipline → When This
+  that stabilizes for only a few turns; local backend with no cross-request KV reuse; Google explicit
+  caching hit fewer than several times per hour — storage fees ($1.00–$4.50/MTok/hour) exceed the
+  read savings.
+- **Also flag (a real finding, not a suppression):** parallel fan-out that fires simultaneous first
+  requests — the cache entry only becomes available after the first response begins, so every
+  sibling misses and pays the write premium; sequence the first request before fanning out.
+- **Why:** caching can lose money in three economic conditions even with a stable prefix — short
+  sessions, where the 25–100% write premium needs 2–3 reads to recoup; high parallelism, where
+  simultaneous requests each miss and pay the write; and Google explicit caching, where storage fees
+  exceed read savings unless the cache is hit several times per hour ([caching discipline → When This
   Backfires; Cache Economics](https://agentpatterns.ai/context-engineering/prompt-caching-architectural-discipline/);
   [static-content-first → Tradeoffs](https://agentpatterns.ai/context-engineering/static-content-first-caching/)).
-- **Fix:** report "caching N/A / not cost-effective here" instead of a cache-discipline finding;
-  audit the hit-rate trace first — if reads don't dominate writes after a few turns, the cost isn't
-  paid back. Remediation: [learn — caching-static-first](https://learn.agentpatterns.ai/context-engineering/caching-static-first/).
+- **Fix:** report "caching N/A / not cost-effective here" instead of a cache-discipline finding —
+  or, for the fan-out case, sequence request 1 then fan out; audit the hit-rate trace first — if
+  reads don't dominate writes after a few turns, the cost isn't paid back. Remediation: [learn — caching-static-first](https://learn.agentpatterns.ai/context-engineering/caching-static-first/).
 
 ### PC-10 — Cache-TTL misfit for the session's idle shape
 - **Scope:** Anthropic explicit caching (the TTL flags and write-premium refresh math are
-  Anthropic-only); automatic-cache providers have no write premium — suppress.
+  Anthropic-only); automatic-cache providers have no write premium — suppress. Google explicit
+  caching has TTL economics too, but as an hourly storage fee — route those to PC-9's
+  storage-fee flag.
 - **Flags:** a harness whose sessions idle **5–60 minutes** between turns (human review in the loop,
   waiting on side-agents) still on the default 5-minute TTL — re-paying the write premium on every
   resume; or the opposite misfits: `ENABLE_PROMPT_CACHING_1H` (or `cache_control: {ttl: "1h"}`) on a

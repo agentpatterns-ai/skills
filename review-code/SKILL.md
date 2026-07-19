@@ -1,8 +1,8 @@
 ---
 name: review-code
-description: "Review a source-code diff, PR, or file against the canonical named review criteria — Fowler code smells paired with named refactorings, Clean Code and A Philosophy of Software Design red flags, error-handling and resource-safety gaps, testability seams and test smells, security and secrets basics, performance basics, plus domain modules for concurrency, database/N+1, distributed-systems, API contracts, and observability — reporting each defect as a precise line-anchored finding with a named fix. Invoke when asked to review code, a diff, or a PR for quality, maintainability, or correctness, or to find code smells and refactoring opportunities in ordinary application source. Skip when the target is a GitHub Actions workflow (use audit-github-actions-security), a SKILL.md (use audit-skill-quality), an agent instruction file (use audit-instruction-file), or an agent harness's security/data-flow architecture (use audit-lethal-trifecta)."
+description: "Review a source-code diff, PR, or file against canonical review criteria — Fowler code smells with named refactorings, Clean Code / A Philosophy of Software Design red flags, error-handling/resource-safety gaps, testability seams and test smells, security/secrets basics, performance basics, plus concurrency, database/N+1, distributed-systems, API-contract, observability modules — each defect reported as a line-anchored finding with a named fix. Invoke when asked to review code, a diff, or a PR for quality, maintainability, or correctness, or to find code smells and refactoring opportunities in ordinary application source. Skip when the target is a GitHub Actions workflow (use audit-github-actions-security), a SKILL.md (use audit-skill-quality), an agent instruction file (use audit-instruction-file), an agent harness's security/data-flow architecture (use audit-lethal-trifecta) or its LLM-output sinks/install authority (use audit-supply-chain-sinks), or when writing new tests from a spec (use write-tests)."
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /review-code [diff | PR number/URL | file/dir path]
 ---
 
@@ -100,6 +100,11 @@ Intent: <what the change does> · Modules: <selected domain modules> · Routed t
 - The one shelf skill whose evidence base is the external canon (Fowler, Martin, Ousterhout,
   Feathers, Beck, McConnell, Hunt & Thomas, OWASP/CWE) rather than the corpus; sibling boundaries
   are in *Scope*.
+- **Transform pair — `write-tests`.** It authors new tests from a specification and drives the
+  red-green-refactor cycle; this skill reviews the tests that already exist (*Testability & test
+  smells*) and, per *Tensions*, never flags a missing test-first process — that lane is `write-tests`.
+  The pair splits by tense: this skill **flags** over-mocking and test smells in tests the diff
+  **already contains**; **choosing** a test double while authoring new tests is `write-tests`.
 
 ## Critical rules (read last)
 - **Every finding = named concept + its backing work + line anchor + named fix + severity** — the work

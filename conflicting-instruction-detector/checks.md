@@ -13,13 +13,15 @@ the "likely-not-a-conflict" list so the false-positive surface is visible, not h
 > conflict; it belongs in likely-not-a-conflict, never at Rank 1. The lexical opposition is a lure;
 > the overlap gate is what catches it.
 
-> Posture: detection of cross-document **semantic** conflict is unreliable enough to justify a
-> read-only design — Claude-3.5-Sonnet was measured at 92.7% on same-type (intra-constraint) but only
-> 74.6% on cross-type (inter-constraint) conflicts, bottoming at 60.3% F1 ([ConInstruct,
-> arXiv:2511.14342](https://arxiv.org/abs/2511.14342)); model capability on this task will drift — the
-> qualitative gap, not the exact figures, is what justifies the design. So CI-2/CI-4 (the semantic
-> classes) carry the most false positives — rank them by *cost*, present them as candidates, and never
-> let the skill resolve them.
+> Posture: the read-only design rests on the **recognition–communication gap** — GPT-4o directly
+> generated a response in 97.5% of conflict-carrying cases, silently resolving rather than flagging
+> ([ConInstruct, arXiv:2511.14342](https://arxiv.org/abs/2511.14342)) — plus imperfect detection:
+> Claude-3.5-Sonnet measured 92.7% on same-type (intra-constraint) but only 74.6% on cross-type
+> (inter-constraint) conflicts, bottoming at 60.3% F1; Claude-4.5-Sonnet narrows the gap (87.7% vs
+> 86.3%) yet still misflags ~1 in 7. (These are within-one-instruction cross-type figures — the
+> nearest measured proxy; cross-document detection is unmeasured and likely harder.) So CI-2/CI-4
+> (the semantic classes) carry the most false positives — rank them by *cost*, present them as
+> candidates, and never let the skill resolve them.
 
 ## Contents
 - [CI-1 — Direct cross-document contradiction](#ci-1--direct-cross-document-contradiction-lexically-alignable)
@@ -48,9 +50,11 @@ the "likely-not-a-conflict" list so the false-positive surface is visible, not h
 - **Flags:** two rules that share *no wording* but cannot both hold for the same input — "respond in
   under 50 words" vs "always include a worked example and a citation"; "never touch prod config" vs
   "keep `deploy.yaml` in sync." The contradiction is in *effect*, inferred, not matched.
-- **Why:** this is the cross-type conflict models detect worst (~60% F1, ConInstruct — the
-  load-bearing evidence; arXiv:2511.14342) — the lane that *needs* a human and the lane most likely
-  to be a false positive. Expect to be wrong often here. Corpus corroboration (of the skill's
+- **Why:** this is the conflict type models detect worst (worst cross-type cell 60.3% F1,
+  Claude-3.5-Sonnet — ConInstruct, the load-bearing evidence; arXiv:2511.14342. Measured on
+  cross-*type* conflicts within one instruction — the nearest available proxy for the cross-document
+  case, which is unmeasured and likely harder) — the lane that *needs* a human and the lane most
+  likely to be a false positive. Expect to be wrong often here. Corpus corroboration (of the skill's
   premise — unresolved cross-file conflicts produce silent bad behavior; the page's own case sits
   closest to CI-3's precedence lane): cross-file conflicts without explicit priority mean agents
   "may skip verification steps rather than ask for clarification"
@@ -61,16 +65,15 @@ the "likely-not-a-conflict" list so the false-positive surface is visible, not h
   then relax or re-scope it. Remediation: [learn — where-prompting-ends](https://learn.agentpatterns.ai/prompt-engineering/where-prompting-ends/).
 
 ## CI-3 — Unresolved cross-document precedence
-- **Flags:** two applicable rules in different documents prescribe different actions for an
-  overlapping input and **no precedence is stated between them** — whether the two documents are
-  peers (two sibling rule files, two skills claiming the same trigger) or sit in a load-order stack
-  (user/project/local CLAUDE.md, CLAUDE.md vs a loaded SKILL.md). Not necessarily a contradiction in
-  content — an *unresolved ordering*. **Do flag** a CLAUDE.md-vs-SKILL.md overlap like any other
-  candidate when neither document states which wins — "later-loaded tends to win" is a folk
-  convention, not a stated rule. *Not this check:* a layer-stack conflict where precedence is
-  **already stated somewhere** (in either document, or the harness's own documented load order for
-  that case) — that's a restate-the-loser fix, `audit-instruction-file`'s lane (CE-5; this skill's
-  Scope defers it once precedence is explicit).
+- **Flags:** two applicable rules in **peer documents** — files with no defined load order between
+  them (two sibling rule files, two skills' body rules claiming the same trigger) — prescribe
+  different actions for an overlapping input and **no precedence is stated between them**. Not
+  necessarily a contradiction in content — an *unresolved ordering*. *Not this check:* documents
+  that sit in one load-order stack (user/project/local CLAUDE.md tiers, CLAUDE.md vs a loaded
+  SKILL.md) — layer-stack precedence, stated or not, is `audit-instruction-file`'s lane (CE-5; the
+  boundary this skill's Scope states). Also not this check: when the "same trigger" collision is
+  between skills' *frontmatter descriptions* (dispatch quality), that is `audit-skill-quality`'s
+  lane (AQ-4 description overlap) — this check covers body rules.
 - **Why:** precedence follows specificity as a *tendency*, not an enforced rule, so an unstated
   winner makes behavior unpredictable (CE-5 precedence, across documents rather than within a stack)
   ([layered-instruction-scopes](https://agentpatterns.ai/instructions/layered-instruction-scopes/)).
@@ -120,7 +123,8 @@ flag as a confirmed defect).
 
 ## What this skill must never do
 - **Never resolve** a conflict, pick a precedence winner, or edit a file — it emits a question.
-- **Never present a candidate as a finding** — the ~60% F1 floor means false positives are expected;
+- **Never present a candidate as a finding** — false positives are expected even from frontier
+  models (worst measured cell 60.3% F1; frontier cross-type ~86%);
   always include the likely-not-a-conflict pairs so the reader calibrates trust
   ([ConInstruct](https://arxiv.org/abs/2511.14342)).
 - **Never offer a `--fix` flag.** The apply step belongs to the human, or — for a *within-file* fix

@@ -64,7 +64,7 @@ intro of each check is the default; downgrade only with a stated reason.
 verifying a hint against a tool's *implementation* is `audit-tool-definition` TD-9.
 - **Flags:** pure-read tools missing `readOnlyHint: true` (`idempotentHint: true` alongside it is
   **advisory** — the MCP spec scopes `destructiveHint`/`idempotentHint` to `readOnlyHint==false`
-  ([MCP spec — schema, *ToolAnnotations*](https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations)),
+  ([MCP spec — schema, *ToolAnnotations*](https://modelcontextprotocol.io/specification/2025-11-25/schema#toolannotations)),
   but the pair gives a harness the documented safe-retry path, so recommend it anyway); a
   mutating tool leaving `destructiveHint`/`idempotentHint` at their permissive spec defaults
   (`destructiveHint` defaults **true**, `idempotentHint` **false**, `openWorldHint` **true** — the
@@ -75,7 +75,8 @@ verifying a hint against a tool's *implementation* is `audit-tool-definition` TD
 - **Why:** annotations are **metadata only, not trustable from untrusted servers** — a hint never
   gates anything; a dishonest hint misleads the client's confirmation prompt ([mcp-server-design,
   *Output Schema and Annotations*](https://agentpatterns.ai/tool-engineering/mcp-server-design/);
-  auditor rules `mcp-tool-annotations` citing [mcp-client-server-architecture](https://agentpatterns.ai/tool-engineering/mcp-client-server-architecture/)).
+  [mcp-client-server-architecture, *Annotate behavioral hints*](https://agentpatterns.ai/tool-engineering/mcp-client-server-architecture/)
+  states the defaults-to-true and explicit-override rule verbatim; auditor rules `mcp-tool-annotations` concur).
 - **Fix:** `readOnlyHint: true` on pure reads, plus `idempotentHint: true` as the advisory pair
   ([read-only-hint-concurrency, *Prerequisites*](https://agentpatterns.ai/tool-engineering/read-only-hint-concurrency/));
   on mutating tools set `destructiveHint`/`idempotentHint` explicitly (an idempotency key before
@@ -88,7 +89,7 @@ verifying a hint against a tool's *implementation* is `audit-tool-definition` TD
   carrying the violated constraint + the violation + recovery context; business-logic failures raised
   as JSON-RPC protocol errors (or protocol errors hidden inside results).
 - **Why:** two channels — **protocol errors** (JSON-RPC codes) are for the client; **tool execution
-  errors** (`isError:true`) are for the agent and the spec says they must contain "actionable feedback
+  errors** (`isError:true`) are for the agent and the spec says these should contain "actionable feedback
   that language models can use to self-correct and retry" ([mcp-server-design, *Error Handling*](https://agentpatterns.ai/tool-engineering/mcp-server-design/);
   [rfc9457-machine-readable-errors](https://agentpatterns.ai/tool-engineering/rfc9457-machine-readable-errors/)).
 - **Fix:** return `isError:true` with constraint+violation+recovery; keep protocol vs execution errors
@@ -127,16 +128,18 @@ verifying a hint against a tool's *implementation* is `audit-tool-definition` TD
 - **Why:** transport is a topology choice, not a latency tweak
   ([mcp-client-server-architecture](https://agentpatterns.ai/tool-engineering/mcp-client-server-architecture/));
   the MCP spec: servers MUST validate `Origin` on all incoming connections
-  ([MCP spec — transports, *Security Warning*](https://modelcontextprotocol.io/specification/2025-06-18/basic/transports)).
+  ([MCP spec — transports, *Security Warning*](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)).
 - **Fix:** match transport to topology; validate `Origin` on every Streamable HTTP server; bind
   localhost when locally-running; authenticate always. Remediation: [learn — what-a-server-exposes](https://learn.agentpatterns.ai/mcp-server-design/what-a-server-exposes/).
 
 ### MS-9b — Unsanitized inputs *(High)*
-- **Flags:** a stdio server that doesn't sanitize args before they reach a shell/exec.
-- **Why:** **schemas do not cover input sanitization** — the stdio SDK runs commands even when the
-  local process fails to start, so unsanitized args are a command-injection hole, the catalog's
-  loudest defect, not an advisory
+- **Flags:** any server — whatever the transport — whose tool handler passes tool arguments to a
+  shell/exec/interpreter without sanitization (stdio's SDK execution model makes this the loudest
+  case: it runs commands even when the local process fails to start).
+- **Why:** **schemas do not cover input sanitization** — argument sanitization is the mitigation,
+  not richer schemas; unsanitized args are a command-injection hole, the catalog's loudest defect,
+  not an advisory (the stdio-SDK incident is the illustrating case, not the scope boundary)
   ([mcp-server-design, *When This Backfires*](https://agentpatterns.ai/tool-engineering/mcp-server-design/)).
-- **Fix:** sanitize stdio args at the boundary before any shell/exec. **Route whole-harness
-  exfiltration risk to `audit-lethal-trifecta`.** Remediation:
+- **Fix:** sanitize tool args at the handler boundary before any shell/exec/interpreter, on every
+  transport. **Route whole-harness exfiltration risk to `audit-lethal-trifecta`.** Remediation:
   [learn — what-a-server-exposes](https://learn.agentpatterns.ai/mcp-server-design/what-a-server-exposes/).

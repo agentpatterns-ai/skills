@@ -1,8 +1,8 @@
 ---
 name: write-tool-description
-description: Write the agent-facing description, parameter docs, and schema constraints for ONE tool/function so the model selects and calls it correctly — positive selection signal, sibling discriminator, return shape, example values, and poka-yoke schema. Invoke when authoring or revising one tool's definition the agent chooses among, or when an agent keeps mis-selecting or mis-calling that tool. Skip when flagging description defects across a whole toolset without rewriting (use audit-tool-definition), auditing a natural-language instruction file (use audit-instruction-file), or compressing a system prompt under a token budget (use compress-prompt).
+description: Write the agent-facing description, parameter docs, and schema constraints for ONE tool/function at a time — run per tool for a set — so the model selects and calls it correctly — positive selection signal, sibling discriminator, return shape, example values, and poka-yoke schema. Invoke when authoring or revising one tool's definition the agent chooses among, or when an agent keeps mis-selecting or mis-calling that tool and you want the corrected definition, not just the diagnosis. Skip when flagging description defects across a whole toolset without rewriting (use audit-tool-definition), auditing a natural-language instruction file (use audit-instruction-file), or compressing a system prompt under a token budget (use compress-prompt).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /write-tool-description [tool name + signature + purpose (+ siblings, side-effects)]
 ---
 
@@ -13,8 +13,9 @@ An agent selects and calls a tool by **reasoning over its definition** — `name
 *when to prefer it* is invisible for that use case
 ([tool-description-quality](https://agentpatterns.ai/tool-engineering/tool-description-quality/)).
 The highest-return edit is the **definition, not the implementation**: better tool ergonomics cut
-task-completion time **40%** (Anthropic case); a concrete sample call lifted complex-parameter
-accuracy **72% → 90%**
+task-completion time **40%** (Anthropic case —
+[tool-description-quality](https://agentpatterns.ai/tool-engineering/tool-description-quality/));
+a concrete sample call lifted complex-parameter accuracy **72% → 90%**
 ([poka-yoke-agent-tools](https://agentpatterns.ai/tool-engineering/poka-yoke-agent-tools/)). This
 skill **produces** that corrected description + parameter docs + schema constraints for one tool.
 
@@ -45,7 +46,9 @@ skill **produces** that corrected description + parameter docs + schema constrai
 
 ## Scope
 Produces the description + per-parameter docs + schema constraints (enums/bounds/gates) for **one**
-tool. **Out of scope:** *flagging* description defects across a whole toolset → `audit-tool-definition`
+tool — a multi-tool rewrite ("fix all five tools on my server") is owned here too, run **once per
+tool**, not delegated. **Out of scope:** *flagging* description defects across a whole toolset
+without rewriting → `audit-tool-definition`
 (the detector pair); implementing the tool or choosing its name/signature; granting permissions;
 auditing a natural-language instruction file → `audit-instruction-file`; compressing a system prompt
 → `compress-prompt`.
@@ -62,7 +65,8 @@ auditing a natural-language instruction file → `audit-instruction-file`; compr
 3. **Write as onboarding a new hire** (WD-4): surface domain terms, ID format/encoding, query/filter
    syntax + valid values, traversal order — the implicit context an agent was never told — and state
    the **return shape** (key fields, empty/failure semantics) (WD-3).
-   Done when the return shape and every implicit-context item are stated.
+   Done when the return shape and every implicit-context item are stated — or explicitly omitted
+   because the input gives no basis for them (WD-12); never fabricated to fill the slot.
 4. **Document each parameter**: unambiguous name (`sprint_id`, not `id`) (WD-5) + a concrete example
    or accepted-values hint, esp. for filter/DSL/regex/query params (WD-6).
    Done when every parameter has an unambiguous name and a concrete example or accepted-values hint — no blanks.
@@ -83,24 +87,35 @@ The thirteen cited requirements the output must satisfy — each removes one def
 
 ## Output template
 ```
-<tool_name> — <one-line job>. Returns <shape: key fields; empty/failure semantics>.
+<tool_name> — <one-line job>. Returns <shape: key fields; empty/failure semantics — only fields the
+input attests; OMIT the Returns clause if the input gives no basis for the shape>.
 Use this when <positive trigger>. Prefer over <sibling> when <Y>; do NOT use to <Z> — use <sibling>.
-<Domain/onboarding context: ID format, query syntax + valid values, traversal order.>
+<Domain/onboarding context: ID format, query syntax + valid values, traversal order — each item only
+when the input supplies it; OMIT what the input gives no basis for; do not guess>.
 Side effects: <mutates X / read-only / idempotent? double-call risk — OMIT this line entirely if the
 input gives no basis to state it; do not guess>.
 Annotations (MCP): <ONLY when the input establishes this is an MCP tool — OMIT this whole line
 otherwise, do not infer MCP-ness from schema shape alone> readOnlyHint: <bool> · destructiveHint:
 <bool> · idempotentHint: <bool — true on pure reads by definition; on mutations only with an
-idempotency key> (or: <assumption stated — implementation unknown>).
+idempotency key>. When the implementation is unknown, OMIT the unknown hints from the block and
+state the assumption as a separate suggestion outside it (WD-12) — never inline.
 
 Parameters:
 - <param_name> (<type>, required): <what it's for; format/valid values>. Example: <concrete value>.
-- <param_name> (<type>, optional): <…>. Default: <…>. (enum: [<a>, <b>] | range <min>–<max>)
+- <param_name> (<type>, optional): <…>. Default: <…>. (enum: [<a>, <b>] | range <min>–<max> — only
+  when the input supplies the values; OMIT rather than invent)
 
-Errors: <what the agent should try next + the expected format>.
+Errors: <what the agent should try next + the expected format — OMIT if the input gives no error
+signal to shape>.
 ```
-Worked example — input `get_sprint_issues(sprint_id: str, status: str) — get issues for a sprint`,
-sibling `list_issues`:
+Worked example — input `get_sprint_issues(sprint_id: str, status: str) — get issues for a Jira sprint`,
+sibling `list_issues` (free-text search), plus this docs excerpt: *"Returns a list of issue objects
+(string id, summary, status, assignee username, story_points); empty list when the sprint has no
+issues.
+sprint_id is the numeric sprint id, e.g. 42 — not the sprint name; ids come from
+list_sprints(board_id). status filters by board column: To Do, In Progress, Done. Unknown sprint_id
+currently returns a bare 400."* Every claim below traces to that input — with only the one-line
+purpose, the Returns clause, domain context, enum, and Errors line would all be OMITTED (WD-12):
 ```
 get_sprint_issues — retrieve all issues in a Jira sprint. Returns a list of objects with keys:
 id (string), summary, status, assignee (username), story_points; empty list if the sprint has none.

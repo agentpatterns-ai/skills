@@ -1,8 +1,8 @@
 ---
 name: audit-skill-quality
-description: Audit one or many SKILL.md files against dispatch (frontmatter) and governance (body) quality criteria — description overlap and missing skip-boundaries, absent required fields, attention-curve/length/compliance-ceiling defects, self-containment and progressive-disclosure violations, prompt-only guardrails standing in for real enforcement, missing step-completion criteria, degrees-of-freedom mismatches, and untestable output — and produce a review writeup. Invoke when reviewing, grading, or vetting a SKILL.md before it ships, or figuring out why a skill won't dispatch or misbehaves once loaded. Skip when the goal is to write or substantially revise a SKILL.md (use write-skill), auditing a plain instruction file that isn't a SKILL.md (use audit-instruction-file), auditing an individual tool/function definition rather than a whole skill (use audit-tool-definition), or shrinking a prompt under a token budget (use compress-prompt).
+description: Audit one or many SKILL.md files against dispatch (frontmatter) and governance (body) quality criteria — description overlap and missing skip-boundaries, absent required fields, attention-curve/length/compliance-ceiling defects, self-containment and progressive-disclosure violations, prompt-only guardrails standing in for real enforcement, missing step-completion criteria, degrees-of-freedom mismatches, and untestable output — and produce a review writeup. Invoke when reviewing, grading, or vetting a SKILL.md before it ships, or figuring out why a skill won't dispatch or misbehaves once loaded. Skip when gating a factory skill for release in this repo (use grade-skill), when the goal is to write or substantially revise a SKILL.md (use write-skill), auditing a plain instruction file that isn't a SKILL.md (use audit-instruction-file), auditing an individual tool/function definition rather than a whole skill (use audit-tool-definition), or shrinking a prompt under a token budget (use compress-prompt).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-skill-quality [path-to-SKILL.md-or-dir]
 ---
 
@@ -85,7 +85,7 @@ Severity: **High** = a dispatch failure (won't load / loads wrongly) or an unenf
 guardrail; **Medium** = body attention/structure/completion-criteria defect; **Low** = density/bloat
 that costs tokens, not correctness.
 
-**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `<skill-name>: <one-line>`, label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
+**Findings → backlog (default).** After the report, **offer** to file the findings as one tracking issue in your backlog tracker (issue tracker) — title `audit-skill-quality: <one-line>` (always this skill's own name, never the audited skill's), label `enhancement`, body = the findings table; interactive: confirm first (never auto-file); autonomous: self-file. Each finding carries its **Fix → lesson** link in both the report and the filed issue, resolved by check ID via [`checks.md`](checks.md).
 
 ## Related / pairing
 - **Detector pair — `write-skill`.** This skill *flags* dispatch+governance defects and rewrites

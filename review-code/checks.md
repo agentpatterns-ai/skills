@@ -20,12 +20,14 @@ judgment: the *Flags* column describes the defect, not a metric threshold.
 | Check (source) | Flags | Named fix |
 |---|---|---|
 | **Function does one thing** (Martin, *Clean Code*; SLAP) | a function mixing abstraction levels or doing several jobs; boolean/flag/selector arguments; command mixed with query (CQS violation) | Extract Function; Split Phase; split the flag into two functions; Separate Query from Modifier |
+| **Large Class / God Class** (Fowler, *Refactoring* — Large Class; Martin — SOLID's SRP / *Clean Code*; Brown et al., *AntiPatterns* — God Class/God Object) | a class/module in the hunk carrying several **unrelated** responsibilities — more than one axis of change; unrelated field clusters each used by a different method group; a `Manager`/`Util`/`Helper` catch-all accreting jobs. This is the class-level counterpart of *Function does one thing*. Flag on **responsibility count, not size**: a large but *cohesive* (deep) module is not a defect — the seam vs *Deep modules* (large ≠ shallow: a deep module is good) and the *Function length* Tension both bind here, so this fires on responsibility spread, **never on line count** | Extract Class along the responsibility seam; Move Function/Field to the owner; split by axis of change |
 | **Duplication — knowledge-level DRY** (Hunt & Thomas; Fowler Duplicated Code; Beck) | the same *knowledge* (rule, constant, shape) stated twice in the diff — not just similar text; third copy of an existing pattern (Rule of Three reached) | Extract Function/Class; Pull Up Method; for two-copy cases prefer AHA — wait for the third before abstracting |
 | **Misplaced behaviour** (Fowler Feature Envy; GRASP Information Expert; Anemic Domain Model) | Feature Envy in the diff; domain logic in controllers/handlers/services while entities are bags of getters | Move Function/Field to the data's owner; push behaviour into the domain object |
 | **Deep modules** (Ousterhout Shallow Module; Fowler Middle Man, Lazy Element) | a Shallow Module; a class/method that only delegates; a pass-through method; classitis | Inline Function/Class; Remove Middle Man; Collapse Hierarchy; merge into a deeper module |
 | **Information hiding** (Ousterhout Information Leakage; Fowler Insider Trading; Spolsky Leaky Abstraction) | one design decision (a format, a schema, an ordering) visible in multiple modules; a module reaching into a sibling's internals; internals exposed "for convenience" | move the decision behind one owner; Move Function/Field; Encapsulate Variable/Record; Hide Delegate |
 | **Law of Demeter** (Lieberherr et al. 1987; Martin, *Clean Code*; Fowler, *Refactoring* Message Chains) | `a.getB().getC().doThing()` chains | Hide Delegate; Tell, Don't Ask |
 | **Polymorphism over conditionals** (Fowler Repeated Switches) | the *same* type-based switch/if-ladder appearing in more than one place, or a new arm added to an existing ladder | Replace Conditional with Polymorphism; Replace Type Code with Subclasses; a single, never-repeated switch is fine |
+| **Substitutability / LSP** (Liskov 1987, *Data Abstraction and Hierarchy*; Liskov & Wing 1994 — signature variance; Martin — SOLID's L; Meyer, *Design by Contract* — the assertion axis) | in the hunk: an override that throws instead of implementing (`NotImplementedError`, `UnsupportedOperationException`); an override that **requires more** than its base (tightened precondition, narrowed argument type) or **promises less** (weakened postcondition, widened or newly-nullable return); a subclass a caller must `isinstance`/`instanceof` to use safely. Requiring *less* and promising *more* — a widened precondition, a covariant return — is substitutable, not a defect | Replace Inheritance with Delegation; Extract Interface to the contract the base honestly guarantees (split the hierarchy at the real seam); Introduce Special Case / Null Object where the "unsupported" arm is really an absent case |
 | **Primitive Obsession & Data Clumps** (Fowler, *Refactoring* — smell catalog) | domain concepts passed as bare strings/ints (money, IDs, ranges); the same group of parameters travelling together | Replace Primitive with Object; Introduce Parameter Object; Extract Class |
 | **Speculative Generality & dead code** (Fowler; YAGNI; Lava Flow; Clean Code Clutter) | hooks, parameters, or abstraction layers with a single concrete use and no second caller in sight; commented-out or unreachable code kept "just in case" | Remove Dead Code; Inline Function/Class; Collapse Hierarchy; delete — version control remembers |
 | **Global & mutable shared data** (Fowler Global Data, Mutable Data) | writes to globals/singletons from deep in logic; data mutated far from where it's read | Encapsulate Variable; Split Variable; prefer immutability; pass state explicitly |
@@ -61,21 +63,27 @@ judgment: the *Flags* column describes the defect, not a metric threshold.
 | **Testability seams** (Feathers, *Working Effectively with Legacy Code*; Clean Code Inappropriate Static) | hidden `new` of collaborators deep in logic; static/global grabs; clock, filesystem, network, randomness read directly; real work in constructors | Parameterize Constructor/Method (inject the dependency); Extract Interface; Extract and Override Factory Method; inject clock/fs/network |
 | **Characterization before change** (Feathers, *Working Effectively with Legacy Code*) | a PR editing gnarly untested code with no test pinning current behaviour first | add characterization tests, then change; Sprout Method/Class for new logic beside untested code |
 | **Test smells** (van Deursen et al.; Meszaros, *xUnit Test Patterns*) | Assertion Roulette; Mystery Guest; Eager Test; Fragile/Erratic tests; Conditional Test Logic; assertion-free "coverage theatre" (Goodhart applied) | one behaviour per test, Arrange-Act-Assert; inline the fixture; split eager tests; make each assert say what failed |
-| **Test the behaviour, not the implementation** (Meszaros; London-vs-Chicago debate) | tests asserting on private internals or mock call sequences that break on refactor; excessive mocking of value-bearing collaborators; snapshot-test overuse | assert on observable behaviour; mock only at genuine boundaries (Test Double taxonomy: prefer fakes/stubs to interaction mocks) |
+| **Test the behaviour, not the implementation** (Meszaros; London-vs-Chicago debate; Khorikov, *Unit Testing Principles, Practices, and Patterns* — managed vs unmanaged dependencies) | tests asserting on private internals or mock call sequences that break on refactor; excessive mocking of value-bearing collaborators — a mocked **managed** dependency (the codebase's own DB/cache) or a mocked internal class; snapshot-test overuse | assert on observable behaviour; mock only at genuine boundaries (Test Double taxonomy: prefer fakes/stubs to interaction mocks; mock **unmanaged** out-of-process dependencies only). **Detector only — tests that already exist:** flag the over-mock and name the fix; *choosing* doubles while authoring new tests is `write-tests`' craft annex |
 | **Deterministic tests** (Meszaros Erratic Test) | unmocked clock/now(), sleeps, real network, order-dependent tests, shared mutable fixtures (Test Run War) | inject time; isolate fixtures per test; remove order dependence |
 
 ## Security basics
 
 In-diff checks only; a full security architecture review is a different engagement. CWE numbers are
-cited plain for reference.
+cited plain for reference. These are ordinary application-source CWEs on ordinary code — the seam vs
+the agent-harness security family: data-flow / egress-as-exfiltration architecture routes to
+`audit-lethal-trifecta`; dependency-install / supply-chain sinks route to `audit-supply-chain-sinks`.
 
 | Check (source) | Flags | Named fix |
 |---|---|---|
-| **Injection** (OWASP A03; CWE-89, CWE-78, CWE-79, CWE-22) | SQL/shell/HTML/path built by string concatenation from external input; `eval` on input; un-encoded output into HTML/JS | parameterized queries; argument arrays, never shell strings; contextual output encoding; canonicalize + allowlist paths |
-| **Secrets in code** (CWE-798; OWASP A02) | credentials, tokens, keys hardcoded or logged; secrets in URLs or error messages | move to secret storage/env injection; redact logs; rotate anything already committed |
-| **Crypto hygiene** (OWASP A02; CWE-327, CWE-330) | home-rolled crypto; ECB mode; `random()` where security matters; string `==` on secrets; fast hashes for passwords | vetted library defaults; CSPRNG; constant-time comparison; argon2/bcrypt/scrypt for passwords |
-| **Object-level authorization** (OWASP A01; IDOR; mass assignment) | handlers loading records by client-supplied ID with no ownership check; request bodies bound wholesale onto ORM entities | check authorization per object, server-side; bind an explicit allowlist DTO |
+| **Injection** (OWASP A03:2021; CWE-89, CWE-78, CWE-79, CWE-22) | SQL/shell/HTML/path built by string concatenation from external input; `eval` on input; un-encoded output into HTML/JS | parameterized queries; argument arrays, never shell strings; contextual output encoding; canonicalize + allowlist paths |
+| **Unsafe deserialization** (CWE-502) | an unsafe deserializer run on external/untrusted bytes — `pickle.loads`, `yaml.load` (non-safe loader), Java `readObject`, Ruby `Marshal.load`, PHP `unserialize` (distinct from *Injection* above — no query/shell/HTML string is built) | a safe loader (`yaml.safe_load`, `json`, a schema-validated allowlist of types); never deserialize untrusted data into live objects |
+| **SSRF** (OWASP A10:2021; CWE-918) | an outbound fetch whose URL/host derives from request input with no allowlist — webhook senders, image proxies, link-preview/URL-fetch, PDF renderers | allowlist the destination; resolve-and-pin the host; block internal/link-local ranges; disable auto-redirect following |
+| **XXE** (CWE-611) | an XML/SAX/DOM parser on untrusted input with external-entity / DTD resolution left enabled | disable external entities + DTDs (defusedxml / `FEATURE_SECURE_PROCESSING` / equivalent) |
+| **Secrets in code** (CWE-798; OWASP A02:2021) | credentials, tokens, keys hardcoded or logged; secrets in URLs or error messages | move to secret storage/env injection; redact logs; rotate anything already committed |
+| **Crypto hygiene** (OWASP A02:2021; CWE-327, CWE-330) | home-rolled crypto; ECB mode; `random()` where security matters; string `==` on secrets; fast hashes for passwords | vetted library defaults; CSPRNG; constant-time comparison; argon2/bcrypt/scrypt for passwords |
+| **Object-level authorization** (OWASP A01:2021; IDOR; mass assignment) | handlers loading records by client-supplied ID with no ownership check; request bodies bound wholesale onto ORM entities | check authorization per object, server-side; bind an explicit allowlist DTO |
 | **Resource-consumption inputs** (ReDoS; zip bombs; CWE-400) | user-supplied regex or catastrophic-backtracking patterns on input; decompression/parse without size limits | bound the pattern (or use RE2-class engines); cap decompressed size and entity expansion |
+| **Memory safety** (CWE Top 25 — CWE-787/CWE-125 out-of-bounds write/read, CWE-416 use-after-free, CWE-476 null dereference) | in unmanaged code (C/C++/`unsafe` Rust): unbounded copies (`strcpy`/`sprintf`/`gets`); manual pointer/index arithmetic with no bounds check; use or double-free after `free`; an allocation/lookup result dereferenced unchecked | bounded APIs (`snprintf`/`strncpy`, `std::span`/checked indexing); RAII/ownership types (smart pointers, Rust ownership) over manual `free`; check before dereference; run the language's sanitizers (ASan/UBSan) in CI |
 
 ## Performance basics
 
@@ -102,9 +110,15 @@ violations of this section):
   Generality. A Builder for two fields, a Factory with one product, a Facade turned God Class — flags,
   not fixes.
 - **TDD & test-first** (Beck vs Ousterhout design-first) — review the tests that exist; don't flag
-  the absence of test-first process, only missing/weak tests for the changed behaviour.
-- **Postel's Law** — "be liberal in what you accept" is contested in modern practice; tolerant
-  parsing at a public boundary deserves a note either way, not a mechanical flag.
+  the absence of test-first process, only missing/weak tests for the changed behaviour (authoring
+  new tests from a spec is `write-tests`). The same split governs **test doubles**: flag an
+  over-mock **in a test the diff contains** (*Test the behaviour, not the implementation*), and
+  route the *choice* of double for tests still to be written to `write-tests` — this skill is the
+  detector, `write-tests` is the author. A legitimate mock of an **unmanaged** out-of-process
+  dependency (third-party API, message bus) is not an over-mock; don't flag it.
+- **Postel's Law** — "be liberal in what you accept" (Postel, RFC 761) is contested in modern
+  practice (RFC 9413, *Maintaining Robust Protocols*); tolerant parsing at a public boundary
+  deserves a note either way, not a mechanical flag.
 
 ## Routing — what not to review by hand
 
@@ -113,3 +127,14 @@ thresholds, coverage numbers, known-CVE dependency and license scans (Procedure 
 out). Whole-repo judgments — Shotgun Surgery, Divergent Change, cross-file duplication and dead code,
 dependency cycles, Refused Bequest — are reliable only with supplied context (call graphs, usage
 counts); without it they go under *Needs repo context*, never asserted as findings.
+
+**Refused Bequest vs Substitutability / LSP** — same hierarchy, different evidence. *Substitutability*
+is asserted only on what the hunk itself shows: an override that throws, a signature that requires
+more or promises less, a caller type-checking a subclass. *Refused Bequest* is the whole-hierarchy
+verdict — this subclass ignores most of what it inherits, so the base is the wrong parent — and needs
+the base's other subclasses and its call sites to support. Without that context it stays here; don't
+promote it by generalizing a single in-diff LSP violation into a claim about the hierarchy. When the
+base's contract is not in the diff and not documented, only the self-evident arms hold — the throwing
+override and the caller type-check; requires-more / promises-less needs the base contract to judge
+against, and without it the finding goes under *Needs repo context* rather than asserting a breach of
+a contract the reviewer inferred.

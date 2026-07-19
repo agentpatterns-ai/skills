@@ -16,7 +16,7 @@ Each item: ID / **Flags** / **Why** (cited) / **Fix** (deterministic). All detec
 | Class | Pattern (illustrative) |
 |---|---|
 | Anthropic / OpenAI key | `sk-ant-[A-Za-z0-9_-]+`, `sk-proj-[A-Za-z0-9_-]+`, `sk-[A-Za-z0-9]{20,}` |
-| Stripe-style live key | `sk_live_…` / `sk-live-…` (both separators occur in the wild) |
+| Stripe-style live key | `sk_live_…` / `sk-live-…` (match both separators for recall; hyphenated variants appear in copied examples) |
 | GitHub token | `ghp_[A-Za-z0-9]{36}`, `gho_…`, `ghs_…` |
 | AWS access key | `AKIA[0-9A-Z]{16}` |
 | Bearer / basic in a request | `Authorization: Bearer <token>`, `https://user:pass@host/` |
@@ -25,7 +25,9 @@ Each item: ID / **Flags** / **Why** (cited) / **Fix** (deterministic). All detec
 | High-entropy fallback | Shannon entropy ≥ 4.0 **and** length ≥ 20, sitting next to a credential-shaped key |
 
 Entropy alone over-fires; gate it on proximity to a credential-shaped key. A placeholder
-(`$VAR`, `<token>`, `sk-…`) is **not** a finding — it signals substitution is required.
+(`$VAR`, `<token>`, `sk-…`) is **not** a finding for these literal matchers — it signals
+substitution is required. (SE-2's Medium tier is different: it fires on the
+pass-a-secret-as-argument *pattern* itself, even when shown with a placeholder.)
 
 ---
 
@@ -69,9 +71,9 @@ Entropy alone over-fires; gate it on proximity to a credential-shaped key. A pla
   [learn — keep-the-keys-out](https://learn.agentpatterns.ai/security/keep-the-keys-out/). **Severity High.**
 
 ### SE-4 — Long-lived / static credential where a short-lived token is available
-- **Flags:** a static `sk-ant-…` or long-lived PAT in CI secrets / container env / shell profile with
-  no OIDC federation, when an ambient workload identity exists. Edge: a leftover `ANTHROPIC_API_KEY`
-  (even `=""`) silently **shadows** federation.
+- **Flags:** a static `sk-ant-…` key — or an equivalent long-lived model-API credential — in CI
+  secrets / container env / shell profile with no OIDC federation, when an ambient workload identity
+  exists. Edge: a leftover `ANTHROPIC_API_KEY` (even `=""`) silently **shadows** federation.
 - **Why:** a static API key is the highest-blast-radius credential — leakable from logs, hooks,
   transcripts, with rotation that never matches incident timelines; WIF removes the key for a
   short-lived OIDC token. `ANTHROPIC_API_KEY` outranks the federation env vars, and `=""` still wins —
@@ -108,10 +110,10 @@ Entropy alone over-fires; gate it on proximity to a credential-shaped key. A pla
   does not cover the file itself ([credential-hygiene-agent-skills](https://agentpatterns.ai/security/credential-hygiene-agent-skills/)).
 - **Fix:** replace with `$VAR` / `<token>` placeholders; route the skill through a wrapper script that
   reads the secret from the env; **extend secret-scanning to skill directories** — a fast edge scanner
-  ([`betterleaks`](https://github.com/betterleaks/betterleaks), the maintained successor to the now
-  feature-complete `gitleaks`) at commit/CI, plus `trufflehog` over full history; rotate the leaked
-  value. Remediation: [learn — keep-the-keys-out](https://learn.agentpatterns.ai/security/keep-the-keys-out/).
-  **Severity High** (live literal) / Low (scanning gap only).
+  ([`betterleaks`](https://github.com/betterleaks/betterleaks), the maintained successor to
+  `gitleaks` — feature-complete, security patches only) at commit/CI, plus `trufflehog` over full
+  history; rotate the leaked value. Remediation: [learn — keep-the-keys-out](https://learn.agentpatterns.ai/security/keep-the-keys-out/).
+  **Severity High** (live literal) / Low (the scanning-gap rider attached to a found literal).
 
 ### SE-7 — System prompt used as a secret / control store (OWASP LLM07)
 - **Flags:** credentials/connection strings, internal business rules (transaction/loan limits),
@@ -149,7 +151,7 @@ Entropy alone over-fires; gate it on proximity to a credential-shaped key. A pla
 |---|---|---|
 | High | SE-1, SE-2 (literal), SE-3, SE-6 (literal) | env injection / wrapper / `permissions.deny` + `PreToolUse` hook / placeholders — **and rotate** |
 | Medium | SE-4, SE-5, SE-7, SE-2 (pattern) | short-lived WIF token / `follow_redirects=False` + index gate / externalise from prompt |
-| Low | SE-6 (scanning gap), SE-8 (recon note) | extend secret-scanning to skill dirs; informational recon note |
+| Low | SE-6 (scanning-gap rider on a found literal), SE-8 (recon note) | extend secret-scanning to skill dirs; informational recon note |
 
 A High finding **halts** the rest of an agent-readiness assessment until the secret is rotated
 (auditor `secrets-and-credentials` cluster: secret-exposure is the first audit to run).

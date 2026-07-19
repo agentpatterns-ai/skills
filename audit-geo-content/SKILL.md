@@ -2,7 +2,7 @@
 name: audit-geo-content
 description: Audit a documentation / content-markdown corpus for AI answer-engine retrieval and citability (GEO) — chunkability (answer-first, atomic, descriptive headings), assertion density, and machine-readable signals (llms.txt, schema). Invoke when reviewing or hardening published docs for AI citation / generative-engine visibility ("is this page citable by ChatGPT/Perplexity/Claude?", a GEO review, or before/after a docs restructure aimed at retrieval). Skip when auditing agent-harness config — tool allowlists, MCP, sandbox/egress (use audit-lethal-trifecta) — or instruction-file prose/attention such as a SKILL.md or CLAUDE.md (use audit-instruction-file); and suppress for private / non-indexed docs.
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-geo-content [path-to-docs-corpus]
 ---
 
@@ -56,7 +56,8 @@ density, machine-readable corpus files. **Out of scope** (hand off):
    Done when every major H2 × D-check has a recorded verdict — no blanks.
 4. **Once per corpus — Machine-readability checks** (GEO-M1…M3): `llms.txt`/`llms-full.txt` presence
    + freshness; schema fidelity/type-for-shape where JSON-LD is emitted; `robots.txt` crawler policy
-   (a `Disallow` on a retrieval bot is fatal to citability — GEO-M3).
+   (a `Disallow` reaching a *compliant* retrieval bot is fatal to citability; on a robots.txt-exempt
+   or evading bot it is an ineffective-block advisory — GEO-M3).
    Done when all three M-checks carry a recorded corpus-level verdict.
 5. **Report** with the template below — per-finding `Check / Where / Flag / Fix`, citing the page and
    **both** the corpus evidence (Why) and the remediation lesson (Fix) — every finding, every time;
@@ -91,10 +92,13 @@ Applicability (GEO-G1): APPLIES — public, indexed docs corpus.   (else: SUPPRE
 **Do NOT:** fabricate stats, hedge-tag, or keyword-stuff to raise density.
 ```
 Severity by retrieval impact: **High** = structural miss that loses the chunk entirely (buried
-answer, non-atomic page) **and GEO-M3** (a blocked retrieval bot is a live-fetch block — fatal to
-citability); **Medium** = substance gaps (low density, missing stat/source) and weaker structural
-signal (generic heading, length out of band); **Low** = **GEO-M1/M2 only** — machine-readable
-hygiene (llms.txt/schema), accruing at indexing time, not live fetch.
+answer, non-atomic page) **and GEO-M3's effective block** (a blocked *compliant* retrieval bot is a
+live-fetch block — fatal to citability); **Medium** = substance gaps (low density, missing
+stat/source, keyword stuffing — GEO-D3, the −10% transfer-negative), weaker structural signal
+(generic heading, length out of band, non-self-contained section — GEO-S5: chunk weakened, not
+lost), and GEO-M3's ineffective-block advisory (exempt/evading bot — intent mismatch, page still
+fetched); **Low** = **GEO-M1/M2 only** — machine-readable hygiene (llms.txt/schema), accruing at
+indexing time, not live fetch.
 
 ## Related / pairing
 A **content-target** audit — the factory's first. Siblings audit *agent files*

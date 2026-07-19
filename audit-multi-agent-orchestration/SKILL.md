@@ -2,14 +2,14 @@
 name: audit-multi-agent-orchestration
 description: Audit an existing multi-agent orchestration's coordination mechanics — typed vs prose handoffs, shared mid-run state, verifier/producer role separation, and loop bounds — and flag the structural smells that make multi-agent systems fail. Invoke when reviewing or hardening a harness that already runs more than one agent (orchestrator-worker, fan-out/synthesis, lead-and-teammates, generator-critic loops), including whether the verifier role is independent of the producer. Skip when deciding whether to go multi-agent at all or which topology (use architecture-committee), auditing the general completion-gating architecture — hooks, ledgers, graders, red-green anchoring (use audit-verification-gates), auditing security legs / prompt-injection (use audit-lethal-trifecta), or a single instruction file's prose (use audit-instruction-file).
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /audit-multi-agent-orchestration [path-to-harness-or-repo]
 ---
 
 # Audit Multi-Agent Orchestration
 
-Multi-agent failures come from **missing structure at the wiring between agents, not from model
-capability** ([typed-schemas-at-agent-boundaries](https://agentpatterns.ai/multi-agent/typed-schemas-at-agent-boundaries/)).
+Most multi-agent failures come from **missing structure at the wiring between agents, not from gaps
+in model capability** ([typed-schemas-at-agent-boundaries](https://agentpatterns.ai/multi-agent/typed-schemas-at-agent-boundaries/)).
 Audits an *already-built* orchestration — sub-agent definitions plus the glue that spawns, hands off,
 gates, and merges — for the four structural smells that defeat its parallelism/correctness:
 **untyped/prose handoffs, shared mid-run state, no independent verifier gate on "done", unbounded loop.**
@@ -35,10 +35,11 @@ gates, and merges — for the four structural smells that defeat its parallelism
   mid-run (scratch files, shared doc, message bus).
 
 ## Scope
-Audits **coordination correctness** of an orchestration that already exists. Verifier checks test one
-property only — "done" is decided by a verifier **independent of the producer** and on the inter-agent
-critical path. **Out of scope:** the *decision* whether to go multi-agent or which topology (use
-`architecture-committee`); general completion-gating architecture — hooks, ledgers, graders, red-green
+Audits **coordination correctness** of an orchestration that already exists. Verifier checks test the
+**inter-agent wiring of the gates** — the "done" verifier's independence from the producer, its
+position on the critical path, ground truth and precision evidence at that boundary (the corpus's
+four conditions), and the pre-write plan-approval handshake. **Out of scope:** the *decision*
+whether to go multi-agent or which topology (use `architecture-committee`); general completion-gating architecture — hooks, ledgers, graders, red-green
 anchoring (use `audit-verification-gates`); *security* legs — private data + untrusted input + egress
 (use `audit-lethal-trifecta`); a single instruction file's prose attention/density (use
 `audit-instruction-file`); live runtime monitoring (static audit only).

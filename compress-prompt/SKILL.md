@@ -2,7 +2,7 @@
 name: compress-prompt
 description: Compress any prompt or instruction file to maximize signal per token — convert prose to tables/bullets/rules, front-load critical constraints, and apply semantics-preserving transforms. Invoke when asked to shorten, tighten, densify, or "make this prompt/instruction file more concise". Skip when editing ordinary docs or source code, or when the goal is to detect (not fix) density problems — use audit-instruction-file for that.
 user-invocable: true
-version: "0.4.0"
+version: "0.5.0"
 usage: /compress-prompt [path-or-text]
 ---
 
@@ -46,12 +46,16 @@ before and after; any regression holds the compression rather than shipping it (
 
 1. **Establish the eval baseline (behavioral targets).** If the target is a skill/instruction artifact
    that has — or, by the target's own convention, *should* have — an eval suite, run it **before
-   touching anything** and confirm a green baseline. No suite? **Recommend one and offer to scaffold
-   it** before compressing — don't silently compress un-evalled behavior. One-off text → skip to step 2.
+   touching anything** and confirm a green baseline. No suite? **Scaffold one (then gate on it) or
+   defer the compression** — proceed ungated only on an explicit user override, and record that
+   override. Don't silently compress un-evalled behavior. One-off text → skip to step 2.
    Detail in [`eval-gate.md`](eval-gate.md) — load it now if this applies.
-   Done when a green baseline, a scaffold offer, or a one-off skip is recorded.
-2. **Measure baseline.** Count tokens (~chars/4) and normative statements
-   (`never|always|must|do not|required`). The before-figure.
+   Done when a green baseline, a no-suite decision (scaffolded / deferred / user override recorded),
+   or a one-off skip is recorded.
+2. **Measure baseline.** Count tokens (~chars/4) and normative statements (case-insensitive
+   `never|always|must|shall|do not|don't|required`). The before-figure. The count is an
+   informational proxy — the transforms themselves move rules between forms; the step-3
+   inventory diff, not this count, is the accounting.
    Done when both before-counts are recorded.
 3. **Inventory constraints.** List every rule, conditional, and compliance-critical rationale
    *before* editing — the invariant the transform must preserve.
@@ -71,9 +75,11 @@ before and after; any regression holds the compression rather than shipping it (
    post-compression — **every eval must still pass.** On any regression, **hold the compression and
    name the suspected dropped detector**; go/no-go is the eval result, not the token delta.
    Done when a post-run verdict is recorded — every eval green, or the compression held with the
-   suspected dropped detector named (one-off/no-suite: the step-1 skip record carries).
+   suspected dropped detector named (one-off: the step-1 skip record carries; no-suite: a scaffolded
+   suite gates here — a deferred or user-overridden run carries the step-1 decision instead).
 8. **Report** the before/after token delta (and eval result); show both versions.
-   Done when the report shows both versions, the token delta, and the eval delta or the recorded one-off/no-suite skip from step 1.
+   Done when the report shows both versions, the token delta, and the eval delta — or, from step 1,
+   the recorded one-off skip or the no-suite outcome (scaffolded / deferred / user override recorded).
 
 ## Guardrails
 
@@ -93,9 +99,10 @@ Naive "make it shorter" breaks both — the non-obvious edges:
 # Prompt compression
 
 Baseline: <N> tokens, <R> normative statements
-Compressed: <M> tokens (−<X>%), <R'> normative statements  ← unchanged, or every delta accounted for (moved → named pointer under Techniques applied)
+Compressed: <M> tokens (−<X>%), <R'> normative statements  ← informational proxy; every delta explained by the step-3 inventory diff (moved → named pointer under Techniques applied)
 
-Eval suite: <S> evals — PRE <S>/<S> green → POST <S>/<S> green   ← gate; held on regression (or: n/a — one-off text)
+Eval suite: <S> evals — PRE <S>/<S> green → POST <S>/<S> green   ← gate; held on regression
+  (or: n/a — one-off text | no suite — scaffolded and gated / compression deferred / user override recorded)
 Constraints preserved: <list — must match the step-3 inventory; moved items named with their pointer>
 Techniques applied: <e.g. prose→table, structural move of <topic> to a skill>
 

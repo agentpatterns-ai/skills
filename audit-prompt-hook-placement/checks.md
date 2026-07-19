@@ -47,7 +47,8 @@ checks. Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ remediation l
 - **Why:** these three properties are exactly when a hook beats a prompt; a prose rule the model can
   forget or override mid-task is not enforcement ([hooks-vs-prompts, Decision Rule + What Hooks Can
   Enforce](https://agentpatterns.ai/instructions/hooks-vs-prompts/)).
-- **Fix:** move to a `PreToolUse` hook (exit 2 blocks, stderr feeds back to the model).
+- **Fix:** move to a `PreToolUse` hook (exit 2 blocks, stderr feeds back to the model; for a
+  `Write`/`Edit`-boundary rule use JSON decision output — see HP-6 for the exit-2 coverage gap).
   → [hooks-and-deterministic-enforcement](https://learn.agentpatterns.ai/tool-engineering/hooks-and-deterministic-enforcement/);
   [where-prompting-ends](https://learn.agentpatterns.ai/prompt-engineering/where-prompting-ends/).
 
@@ -87,11 +88,18 @@ checks. Each item: ID / **Flags** / **Why** (cited) / **Fix** (→ remediation l
 
 ### HP-6 — Fail-open hook *(deterministic, exit-code inspectable)*
 - **Flags:** a block hook exiting with **code 1 (or anything but 2)**, or with no dependency /
-  availability guard.
+  availability guard; **or** a hook guarding a `Write`/`Edit` boundary that relies on **bare exit 2**
+  with no JSON decision output — a second, distinct fail-open mode.
 - **Why:** any exit code other than 0 or 2 is treated as a hook *error* and does **not** block — it
   fails open silently; a teammate with a missing dependency gets no enforcement and no warning
   ([enforcing-agent-behavior, Block: Exit Code 2 + Hooks fail open silently](https://agentpatterns.ai/instructions/enforcing-agent-behavior-with-hooks/)).
-- **Fix:** block with **exit 2**, redirect the message to stderr, guard dependencies.
+  And exit 2 itself has coverage gaps: `PreToolUse` exit 2 has failed to block `Write` and `Edit`
+  while still blocking `Bash` ([anthropics/claude-code #13744](https://github.com/anthropics/claude-code/issues/13744)),
+  and has halted the agent idle rather than acting on stderr ([#24327](https://github.com/anthropics/claude-code/issues/24327))
+  ([enforcing-agent-behavior, When This Backfires](https://agentpatterns.ai/instructions/enforcing-agent-behavior-with-hooks/)).
+- **Fix:** block with **exit 2**, redirect the message to stderr, guard dependencies — and where
+  tool-level nuance matters (`Write`/`Edit` boundaries), prefer **JSON stdout with explicit
+  `decision`/`permissionDecision` fields** over bare exit codes.
   → [hooks-deterministic-guardrails](https://learn.agentpatterns.ai/harness-engineering/hooks-deterministic-guardrails/).
 
 ### HP-7 — Hook-source trust
